@@ -7,7 +7,7 @@ function App() {
   return (
     <div className="app-container">
       {/* NAVBAR */}
-      <nav className="navbar navbar-expand-lg navbar-dark fixed-top w-100 shadow">
+      <nav className="navbar navbar-expand-lg fixed-top w-100 shadow">
         <div className="container-fluid">
           <div>
             <img
@@ -52,7 +52,7 @@ function App() {
       </div>
 
       {/* FOOTER */}
-      <footer className="footer text-center py-3 bg-primary text-white">
+      <footer className="footer text-center py-3 text-white">
         © 2025 Condor - Todos los derechos reservados
       </footer>
     </div>

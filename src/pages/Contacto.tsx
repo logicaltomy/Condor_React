@@ -12,13 +12,13 @@ import React, { useState } from "react"; //permite manejar valores dinámicos, c
     alert(`Gracias ${nombre}, tu mensaje ha sido enviado!`); //Todo lo que pongas dentro de ${} se evalúa y se reemplaza por su valor.
     setNombre("");
     setEmail("");
-    setMensaje("");zz
+    setMensaje("");
   };
 
   return (
     <div className="main-content">
-      <h1 className="text-white fw-bold display-5 mb-3">Contacto 📬</h1>
-      <p className="lead text-white mb-4">
+      <h1>Contacto 📬</h1>
+      <p>
         Completa el formulario y nos pondremos en contacto contigo.
       </p>
       <form onSubmit={handleSubmit} className="w-100" style={{ maxWidth: "500px" }}>
