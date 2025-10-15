@@ -7,7 +7,7 @@
   align-items: center;
   min-height: 120px;
   justify-content: space-between;
-  background: #baedbd;
+  background: #ededdc;
 }
 
 .right-card-text {
@@ -38,7 +38,7 @@
   align-items: center;
   min-height: 120px;
   justify-content: space-between;
-  background: #b0c097;
+  background: #d7eef4;
 }
 
 .left-card-text {
@@ -154,6 +154,51 @@ se usan en App.tsx (Vendrian siendo los links)
   margin-top: 5px;
   text-align: center;
 }
+
+/* Para los íconos del menu*/
+
+.icon-row {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 22px;
+  margin: 28px 0;
+}
+
+.icon-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  background: #2E7D32; /* verde cerro */
+  color: #fff;
+  border-radius: 16px;
+  width: 90px;
+  height: 90px;
+  padding: 12px;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.15);
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.icon-item:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.2);
+}
+
+.icon-item svg {
+  width: 36px;
+  height: 36px;
+  margin-bottom: 8px;
+}
+
+.icon-item span {
+  font-size: 0.9rem;
+  font-weight: 600;
+  letter-spacing: 0.2px;
+}
+
+
 
 
 /* Contenido central centrado */
