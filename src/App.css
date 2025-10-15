@@ -1,3 +1,66 @@
+/* Sección tipo card horizontal invertida (texto a la derecha, imagen a la izquierda) */
+.right-card {
+  width: 100%;
+  padding: 32px 24px;
+  display: flex;
+  flex-direction: row-reverse;
+  align-items: center;
+  min-height: 120px;
+  justify-content: space-between;
+  background: #baedbd;
+}
+
+.right-card-text {
+  flex: 1;
+  text-align: right;
+  justify-content: right;
+  max-width: 700px;
+}
+
+.right-card-img-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.right-card-img {
+  width: 200px;
+  height: auto;
+  margin-bottom: 16px;
+  border-radius: 8px;
+  object-fit: cover;
+}
+/* Sección tipo card horizontal con imagen y botón debajo */
+.left-card {
+  width: 100%;
+  padding: 32px 24px;
+  display: flex;
+  align-items: center;
+  min-height: 120px;
+  justify-content: space-between;
+  background: #b0c097;
+}
+
+.left-card-text {
+  flex: 1;
+  text-align: left;
+  justify-content: left;
+  max-width: 700px;
+}
+
+.left-card-img-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.left-card-img {
+  width: 200px;
+  height: auto;
+  margin-bottom: 16px;
+  border-radius: 8px;
+  object-fit: cover;
+}
 /* Reset total y box-sizing */
 * {
   margin: 0;
@@ -33,23 +96,30 @@ se usan en Inicio.tsx
   top: 0;
   left: 0;
   width: 100%;
-  height: 10%;
+  min-height: 60px;
+  height: auto;
   z-index: 1000;
   background-color: #1e541e;
   color: white;
   box-shadow: 0 2px 6px rgba(0,0,0,0.2);
   padding: 10px 20px;
   display: flex;
+  align-items: center;
 }
 
 /* Ajusta el carrusel para que esté justo debajo de la navbar */
 .carousel-img {
-  height: 500px; /* altura fija para el carrusel */
-  width: 1350px; /* ajusta el ancho al contenedor */
-  margin: 60px auto 0 auto; /* ajusta el margen superior para compensar el navbar */
+  height: 400px; /* altura fija para el carrusel */
+  width: 100%; /* ajusta el ancho al contenedor */
+  margin: 0px auto 0 auto; /* ajusta el margen superior para compensar el navbar */
   display: block; /* asegura que la imagen se comporte como un bloque */
   object-fit: cover; /* asegura que la imagen cubra el área sin distorsionarse */
+}
 
+.carousel{
+    width: 100%; /* ajusta el ancho al contenedor */
+    margin: 0;
+    padding: 0;
 }
 
 
@@ -63,6 +133,11 @@ se usan en App.tsx (Vendrian siendo los links)
   padding: 10px 20px;
   margin: 5px;
   color: white;
+}
+
+.btn:hover {
+  background-color: #1e741e; /* verde más oscuro */
+  color: #fff;
 }
 
 .display-4 {
@@ -86,22 +161,63 @@ se usan en App.tsx (Vendrian siendo los links)
   flex: 1;
   display: flex;
   flex-direction: column;
-  justify-content: center;   /* centra vertical */
+  justify-content: flex-start;   /* centra vertical */
   align-items: center;       /* centra horizontal */
   text-align: center;        /* centra el texto */
-  padding: 0px 20px 20px 20px; /* espacio para navbar */
-  width: 100vw;
+  padding: 0px 0px 0px 0px; /* espacio para navbar */
+  width: 100%;
   color: black; /* letras blancas sobre fondo azul */
 }
 
 /* Footer fijo abajo */
 .footer {
-  position: fixed;
   bottom: 0;
   left: 0;
-  width: 100vw;
+  width: 100%;
   background-color: #1e541e;
   color: #fff;
   text-align: center;
   padding: 12px 0;
+  margin-top: 20px;
 }
+
+.card {
+  height: 100%; /* altura completa del contenedor */
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between; /* espacio entre imagen y texto */
+  box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.row {
+  display: flex;
+  gap: 60px; /* espacio igual entre las cards */
+}
+
+.card-body {
+  display: flex;
+  flex-direction: column;
+  justify-content: center; /* centra verticalmente */
+  text-align: justify;
+  min-height: 200px;
+  height: auto;
+}
+
+.card-img-top {
+  height: 200px; /* altura fija para las imágenes de las cards */
+  width: 100%; /* ajusta el ancho al contenedor */
+  object-fit: cover; /* asegura que la imagen cubra el área sin distorsionarse */
+}
+
+@media (max-width: 991.98px) {
+  .navbar-collapse {
+    justify-content: flex-end !important;
+  }
+  .navbar-nav {
+    align-items: flex-end !important;
+    width: 100%;
+  }
+} 

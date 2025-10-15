@@ -1,9 +1,24 @@
+import { useEffect } from "react";
 import { Routes, Route, Link } from "react-router-dom";
 import Home from "./pages/Inicio";
 import Nosotros from "./pages/Nosotros";
 import Contacto from "./pages/Contacto";
 
 function App() {
+  useEffect(() => {
+    const updatePadding = () => {
+      const navbar = document.querySelector(".navbar") as HTMLElement;
+      const mainContent = document.querySelector(".main-content") as HTMLElement;
+      if (navbar && mainContent) {
+        const navbarHeight = navbar.offsetHeight;
+        mainContent.style.paddingTop = `${navbarHeight}px`;
+      }
+    };
+    updatePadding();
+    window.addEventListener("resize", updatePadding);
+    return () => window.removeEventListener("resize", updatePadding);
+  }, []);
+
   return (
     <div className="app-container">
       {/* NAVBAR */}
@@ -31,11 +46,6 @@ function App() {
                 <Link className="btn btn-lg" to="/nosotros">
                   Nosotros
                 </Link>                
-              </li>
-              <li className="nav-item">
-                <Link className="btn btn-lg" to="/contacto">
-                  Contacto
-                </Link>
               </li>
             </ul>
           </div>
