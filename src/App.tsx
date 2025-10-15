@@ -3,6 +3,8 @@ import { Routes, Route, Link } from "react-router-dom";
 import Home from "./pages/Inicio";
 import Nosotros from "./pages/Nosotros";
 import Contacto from "./pages/Contacto";
+import ScrollToTop from "./pages/ScrollToTop";
+
 
 function App() {
   useEffect(() => {
@@ -54,6 +56,7 @@ function App() {
 
       {/* CONTENIDO PRINCIPAL */}
       <div className="main-content">
+        <ScrollToTop />
         <Routes>
           <Route path="/" element={<Home />} />
           <Route path="/nosotros" element={<Nosotros />} />
