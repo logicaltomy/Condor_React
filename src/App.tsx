@@ -1,12 +1,16 @@
-import { useEffect } from "react";
+import { useState, useEffect } from "react";
 import { Routes, Route, Link } from "react-router-dom";
 import Home from "./pages/Inicio";
 import Nosotros from "./pages/Nosotros";
 import Contacto from "./pages/Contacto";
+import Login from "./pages/Login";
+import Register from "./pages/Register";
+import Perfil from "./pages/Perfil";
 import ScrollToTop from "./pages/ScrollToTop";
 
-
 function App() {
+  const [sesionIniciada, setSesionIniciada] = useState(false);
+
   useEffect(() => {
     const updatePadding = () => {
       const navbar = document.querySelector(".navbar") as HTMLElement;
@@ -19,6 +23,12 @@ function App() {
     updatePadding();
     window.addEventListener("resize", updatePadding);
     return () => window.removeEventListener("resize", updatePadding);
+
+    // Al montar el componente, revisamos localStorage
+    if (localStorage.getItem("sesionIniciada") === "true") {
+      setSesionIniciada(true);
+    }
+
   }, []);
 
   return (
@@ -49,6 +59,11 @@ function App() {
                   Nosotros
                 </Link>                
               </li>
+              <li className="nav-item">
+                <Link className="btn btn-lg" to={sesionIniciada ? "/perfil" : "/login"}>
+                  Perfil
+                </Link>                
+              </li>
             </ul>
           </div>
         </div>
@@ -61,6 +76,8 @@ function App() {
           <Route path="/" element={<Home />} />
           <Route path="/nosotros" element={<Nosotros />} />
           <Route path="/contacto" element={<Contacto />} />
+          <Route path="/login" element={<Login setSesionIniciada={setSesionIniciada} />} />          <Route path="/register" element={<Register />} />
+          <Route path="/perfil" element={<Perfil />} />
         </Routes>
       </div>
 
