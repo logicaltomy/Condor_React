@@ -1,6 +1,6 @@
 import React, { useState } from "react";
-import { usuarios } from "../User";
-import { useNavigate } from "react-router-dom";
+import { obtenerUsuarios } from "../User";
+import { Link, useNavigate } from "react-router-dom";
 import { iniciarSesion } from "../Sesion";
 
 interface LoginProps {
@@ -21,6 +21,7 @@ const Login: React.FC<LoginProps> = ({setSesionIniciada}) => { // Declara un com
       const validarFormulario = () => {
         const nuevosErrores = { Correo: "", Contrasenia: "" };
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        const usuarios = obtenerUsuarios();
         if (!Correo.trim()) {
           nuevosErrores.Correo = "El Correo es obligatorio.";
         }
@@ -44,24 +45,32 @@ const Login: React.FC<LoginProps> = ({setSesionIniciada}) => { // Declara un com
 
       const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
+        const usuarios = obtenerUsuarios();
 
         const nuevosErrores = validarFormulario();
+        const usuario = usuarios.find(user => user.email === Correo);
+        const username = usuario ? usuario.username : "";
 
         if (!nuevosErrores.Correo && !nuevosErrores.Contrasenia) {
-          alert(`Gracias ${Correo}, has iniciado sesion!`); //Todo lo que pongas dentro de ${} se evalúa y se reemplaza por su valor.
+          alert(`Gracias ${username}, has iniciado sesion!`); //Todo lo que pongas dentro de ${} se evalúa y se reemplaza por su valor.
           setCorreo("");
           setContrasenia("");
           setErrores({ Correo: "", Contrasenia: "" });
           iniciarSesion();
           setSesionIniciada(true);
           navigate("/perfil");
+          localStorage.setItem("usuarioActual", Correo); // Guardar el usuario actual en localStorage
         }
       }
 
     return (
-    <div className="main-content">
-        <h2>Iniciar Sesion</h2>
-        <form onSubmit={handleSubmit} className="w-100" style={{ maxWidth: "500px" }}>
+    <div className="main-content" style={{backgroundImage: "url('../src/img/fondo_final.jpeg')", backgroundSize: "cover", minHeight: "100vh", padding: "20px", display: "flex", flexDirection: "column", justifyContent: "center", alignItems: "center"}}>
+      <div className="d-flex align-items-center mb-4">
+        <img src="../src/img/logo_negro.png" className="logo_forms" alt="logo_forms" style={{marginRight: "20px"}}></img>
+        <h1>CONDOR</h1>
+      </div>
+        <form onSubmit={handleSubmit} className="w-100">
+            <h2 style={{textAlign: "center"}}>Iniciar Sesion</h2>
             <div className="mb-3">
                 <label htmlFor="correo" className="form-label">Correo</label>
                 <input 
@@ -89,9 +98,12 @@ const Login: React.FC<LoginProps> = ({setSesionIniciada}) => { // Declara un com
                 />
                 {errores.Contrasenia && <p className="text-danger">{errores.Contrasenia}</p>}
             </div>
-            <button type="submit" className="btn btn-primary">
+            <button type="submit" className="btn btn-primary" style={{alignItems: "center"}}>
                 Entrar
             </button>
+            <Link to="/register" className="btn btn-link">
+                ¿No tienes una cuenta? Regístrate
+            </Link>
         </form>
     </div>
   );

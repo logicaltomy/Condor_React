@@ -135,7 +135,12 @@ se usan en App.tsx (Vendrian siendo los links)
   color: white;
 }
 
-.btn:hover {
+.btn-primary:hover {
+  background-color: #1e741e; /* verde más oscuro */
+  color: #fff;
+}
+
+.btn-lg:hover {
   background-color: #1e741e; /* verde más oscuro */
   color: #fff;
 }
@@ -208,7 +213,6 @@ se usan en App.tsx (Vendrian siendo los links)
   flex-direction: column;
   justify-content: flex-start;   /* centra vertical */
   align-items: center;       /* centra horizontal */
-  text-align: center;        /* centra el texto */
   padding: 0px 0px 0px 0px; /* espacio para navbar */
   width: 100%;
   color: black; /* letras blancas sobre fondo azul */
@@ -223,7 +227,6 @@ se usan en App.tsx (Vendrian siendo los links)
   color: #fff;
   text-align: center;
   padding: 12px 0;
-  margin-top: 20px;
 }
 
 .card {
@@ -272,5 +275,39 @@ form {
   padding: 20px 25px;
   border-radius: 8px;
   box-shadow: 0 0 10px rgba(0,0,0,0.1);
-  width: 320px;
+  width: 300px;
+  color: white;
+  max-width: 400px;
+}
+
+.logo_forms {
+  width: 100px;  /* ancho deseado */
+  height: auto;
+  margin-bottom: 20px;
+  margin-top: 20px;
+  float: left;
+}
+
+.form-label {
+  text-align: left;
+}
+
+form .btn {
+  display: block;          /* para poder centrarlo */
+  margin: 20px auto 0;     /* centra horizontalmente */
+  min-width: 200px;
+}
+
+.btn-link {
+  color: white;
+  text-decoration: underline;
+  background: none;
+  border: none;
+  padding: 0;
+  font: inherit;
+  cursor: pointer;
+}
+
+.btn-link:hover {
+  color: #ddd;
 }

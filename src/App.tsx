@@ -24,11 +24,6 @@ function App() {
     window.addEventListener("resize", updatePadding);
     return () => window.removeEventListener("resize", updatePadding);
 
-    // Al montar el componente, revisamos localStorage
-    if (localStorage.getItem("sesionIniciada") === "true") {
-      setSesionIniciada(true);
-    }
-
   }, []);
 
   return (
@@ -52,7 +47,7 @@ function App() {
           <div className="collapse navbar-collapse" id="navbarNav">
             <ul className="navbar-nav ms-auto">
               <li className="nav-item">
-                <Link className="btn btn-lg" to="/"> Inicio</Link>
+                <Link className="btn btn-lg" to="/"> Inicio</Link> 
               </li>
               <li className="nav-item">
                 <Link className="btn btn-lg" to="/nosotros">
