@@ -1,16 +1,20 @@
 import React, { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom"; // <- agrega useNavigate
 import "../App.css";
-import { obtenerUsuarios } from "../User";
-import { cerrarSesion } from "../Sesion"; // <- importa el helper para cerrar sesión
+import { obtenerUsuarios, actualizarUsuario, type User } from "../User"; // desde la 1.8.0 - importa el helper para actualizarUsuario
+
+import { cerrarSesion } from "../Sesion"; // <- importa el helper para cerrar sesión desde la 1.7.0
+
+
 
 const Perfil: React.FC = () => {
 const navigate = useNavigate(); // <- para redirigir sin recargar
 
+
   // se crea una variable reactiva para almacenar la informacion del usuario actual
     // usuarioActual es un objeto que contiene el username y el email, o null si no hay usuario
       // setUsuarioActual es la función para actualizar el estado de usuarioActual y React vuelve a renderizar el componente cuando cambia este estado
-const [usuarioActual, setUsuarioActual] = useState<{ username:string; email:string } | null>(null); // (null) indica que inicialmente no hay usuario cargado
+const [usuarioActual, setUsuarioActual] = useState<User | null>(null); // (null) indica que inicialmente no hay usuario cargado
 // cuando se encuentre dicho usuario, se reemplaza el null en cuestión por el objeto con su información
 
 
@@ -33,9 +37,22 @@ const [usuarioActual, setUsuarioActual] = useState<{ username:string; email:stri
   }, []);
 
   const handleCerrarSesion = () => {
-    // Si no usas helper: localStorage.removeItem("usuarioActual"); localStorage.removeItem("sesionIniciada");
     cerrarSesion();                 // limpia claves de sesión
     navigate("/login", { replace: true }); //  redirige y evita volver con “atrás”
+  };
+
+  // Maneja el cambio de foto de perfil
+  const handleFotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !usuarioActual) return;
+
+    const reader = new FileReader();
+    reader.onload = () => {
+      const dataUrl = reader.result as string;
+      actualizarUsuario(usuarioActual.email, { foto: dataUrl });
+      setUsuarioActual({ ...usuarioActual, foto: dataUrl }); // Actualiza vista en tiempo real
+    };
+    reader.readAsDataURL(file);
   };
 
 // En localStorage solo se guarda el correo del usuario que inició sesion mas recientemente. Fijarse en esto -> localStorage.setItem("usuarioActual", Correo);
@@ -45,13 +62,32 @@ const [usuarioActual, setUsuarioActual] = useState<{ username:string; email:stri
         <div className="perfil-body">
           <h2 className="perfil-titulo">Perfil del Usuario</h2>
 
-          <div className="perfil-avatar">👤</div>
+          <div className="perfil-avatar">
+            {usuarioActual?.foto ? (
+              <img
+                src={usuarioActual.foto}
+                alt="Foto de perfil"
+                style={{ width: 120, height: 120, borderRadius: "50%" }}
+              />
+            ) : (
+              <div style={{ width: 120, height: 120, borderRadius: "50%", background: "#eee", display: "grid", placeItems: "center" }}>👤</div>
+            )}
+          </div>
+
+          <div>
+            
+            <label className="btn btn-secondary">
+              Cambiar foto
+              <input type="file" accept="image/*" onChange={handleFotoChange} style={{ display: "none" }} />
+            </label>
+          </div>
+
           <div className="perfil-info">
           {usuarioActual ? (
             <div className="perfil-info">
               <p><strong>Nombre:</strong> {usuarioActual.username}</p>
               <p><strong>Correo:</strong> {usuarioActual.email}</p>
-            </div>
+          </div>
           ) : (
             <p>No se encontró información del usuario. Inicia sesión nuevamente.</p>
           )}

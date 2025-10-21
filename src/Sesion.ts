@@ -10,7 +10,7 @@ export const iniciarSesion = (email: string) => {
 export const cerrarSesion = () => {
   localStorage.removeItem("usuarioActual");
   localStorage.removeItem("sesionIniciada");
-  // Si más adelante guardas favoritos, tokens, etc. también los limpias aquí.
+  // Si más adelante se guardan favoritos, tokens, etc..
 };
 
 // Verifica si hay sesión activa
