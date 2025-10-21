@@ -1,8 +1,44 @@
-import React from "react";
-import { Link } from "react-router-dom";
+import React, { useEffect, useState } from "react";
+import { Link, useNavigate } from "react-router-dom"; // <- agrega useNavigate
 import "../App.css";
+import { obtenerUsuarios } from "../User";
+import { cerrarSesion } from "../Sesion"; // <- importa el helper para cerrar sesión
 
 const Perfil: React.FC = () => {
+const navigate = useNavigate(); // <- para redirigir sin recargar
+
+  // se crea una variable reactiva para almacenar la informacion del usuario actual
+    // usuarioActual es un objeto que contiene el username y el email, o null si no hay usuario
+      // setUsuarioActual es la función para actualizar el estado de usuarioActual y React vuelve a renderizar el componente cuando cambia este estado
+const [usuarioActual, setUsuarioActual] = useState<{ username:string; email:string } | null>(null); // (null) indica que inicialmente no hay usuario cargado
+// cuando se encuentre dicho usuario, se reemplaza el null en cuestión por el objeto con su información
+
+
+// UseEffect se usa para ejecutar código cuando el componente se monta o actualiza
+  useEffect(() => {
+    // Busca en el almacenamiento local del navegador (localStorage) el correo del usuario que se guardó al iniciar sesion
+    const correoGuardado = localStorage.getItem("usuarioActual");
+
+    // si existe un correo guardado, busca en la lista de usuarios el que coincida con ese correo
+    if (correoGuardado) {
+      // trae la lista de usuarios desde User.ts
+      const usuarios = obtenerUsuarios();
+      // .find recorre la lista de usuarios y devuelve el primero que cumpla la condición (que su email coincida con el correo guardado)
+      const usuarioEncontrado = usuarios.find(user => user.email === correoGuardado);
+      if (usuarioEncontrado) {
+        // si se encuentra el usuario, actualiza el estado usuarioActual con su información
+        setUsuarioActual(usuarioEncontrado);
+      }
+    }
+  }, []);
+
+  const handleCerrarSesion = () => {
+    // Si no usas helper: localStorage.removeItem("usuarioActual"); localStorage.removeItem("sesionIniciada");
+    cerrarSesion();                 // limpia claves de sesión
+    navigate("/login", { replace: true }); //  redirige y evita volver con “atrás”
+  };
+
+// En localStorage solo se guarda el correo del usuario que inició sesion mas recientemente. Fijarse en esto -> localStorage.setItem("usuarioActual", Correo);
   return (
     <div className="main-content perfil-container">
       <div className="card perfil-card">
@@ -10,13 +46,18 @@ const Perfil: React.FC = () => {
           <h2 className="perfil-titulo">Perfil del Usuario</h2>
 
           <div className="perfil-avatar">👤</div>
-
           <div className="perfil-info">
-            <p><strong>Nombre:</strong> Nombre</p>
-            <p><strong>Correo:</strong> nombre@correo.com</p>
+          {usuarioActual ? (
+            <div className="perfil-info">
+              <p><strong>Nombre:</strong> {usuarioActual.username}</p>
+              <p><strong>Correo:</strong> {usuarioActual.email}</p>
+            </div>
+          ) : (
+            <p>No se encontró información del usuario. Inicia sesión nuevamente.</p>
+          )}
           </div>
 
-          <button className="btn btn-primary perfil-boton">
+          <button className="btn btn-primary perfil-boton" onClick={handleCerrarSesion}>
             Cerrar Sesión
           </button>
 
