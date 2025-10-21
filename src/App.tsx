@@ -7,9 +7,10 @@ import Login from "./pages/Login";
 import Register from "./pages/Register";
 import Perfil from "./pages/Perfil";
 import ScrollToTop from "./pages/ScrollToTop";
+import { sesionActiva } from "./Sesion"; 
 
 function App() {
-  const [sesionIniciada, setSesionIniciada] = useState(false);
+  const [sesionIniciada, setSesionIniciada] = useState(sesionActiva());
 
   useEffect(() => {
     const updatePadding = () => {
@@ -71,8 +72,9 @@ function App() {
           <Route path="/" element={<Home />} />
           <Route path="/nosotros" element={<Nosotros />} />
           <Route path="/contacto" element={<Contacto />} />
-          <Route path="/login" element={<Login setSesionIniciada={setSesionIniciada} />} />          <Route path="/register" element={<Register />} />
-          <Route path="/perfil" element={<Perfil />} />
+          <Route path="/login" element={<Login setSesionIniciada={setSesionIniciada} />} />
+          <Route path="/perfil" element={<Perfil setSesionIniciada={setSesionIniciada} />} /> {/* 👈 */}
+          <Route path="/register" element={<Register />} />
         </Routes>
       </div>
 

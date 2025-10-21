@@ -6,8 +6,11 @@ import { obtenerUsuarios, actualizarUsuario, type User } from "../User"; // desd
 import { cerrarSesion } from "../Sesion"; // <- importa el helper para cerrar sesión desde la 1.7.0
 
 
+type PerfilProps = {
+  setSesionIniciada: React.Dispatch<React.SetStateAction<boolean>>;
+};
 
-const Perfil: React.FC = () => {
+const Perfil: React.FC<PerfilProps> = ({ setSesionIniciada }) => {
 const navigate = useNavigate(); // <- para redirigir sin recargar
 
 
@@ -36,11 +39,12 @@ const [usuarioActual, setUsuarioActual] = useState<User | null>(null); // (null)
     }
   }, []);
 
-  const handleCerrarSesion = () => {
-    cerrarSesion();                 // limpia claves de sesión
-    navigate("/login", { replace: true }); //  redirige y evita volver con “atrás”
-  };
 
+  const handleCerrarSesion = () => {
+    cerrarSesion();            // limpia localStorage (usuarioActual, sesionIniciada)
+    setSesionIniciada(false);  // 👈 actualiza la UI del navbar
+    navigate("/login", { replace: true });
+  };
   // Maneja el cambio de foto de perfil
   const handleFotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
