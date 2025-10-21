@@ -311,3 +311,79 @@ form .btn {
 .btn-link:hover {
   color: #ddd;
 }
+
+/* Estilos para pagina de perfil */
+.perfil-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 40px 10px;
+}
+
+.perfil-card {
+  max-width: 420px;
+  width: 100%;
+  border-radius: 16px;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+  overflow: hidden;
+}
+
+.perfil-body {
+  padding: 30px 25px;
+  text-align: center;
+}
+
+.perfil-titulo {
+  margin-bottom: 20px;
+  font-size: 1.8rem;
+  font-weight: 700;
+  color: #2e7d32;
+}
+
+.perfil-avatar {
+  width: 90px;
+  height: 90px;
+  border-radius: 50%;
+  background-color: #f4f4f4;
+  margin: 0 auto 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 2.8rem;
+  color: #666;
+  box-shadow: inset 0 0 8px rgba(0, 0, 0, 0.1);
+}
+
+.perfil-info {
+  text-align: left;
+  margin-bottom: 25px;
+}
+
+.perfil-info p {
+  margin: 6px 0;
+  font-size: 1rem;
+  color: #333;
+}
+
+.perfil-boton {
+  width: 100%;
+  background-color: #2e7d32;
+  border: none;
+  transition: background-color 0.2s;
+}
+
+.perfil-boton:hover {
+  background-color: #256628;
+}
+
+.perfil-volver {
+  display: block;
+  margin-top: 12px;
+  color: #2e7d32;
+  text-decoration: none;
+  font-weight: 600;
+}
+
+.perfil-volver:hover {
+  text-decoration: underline;
+}

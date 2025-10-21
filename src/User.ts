@@ -11,6 +11,7 @@ export let usuarios: User[] = usuariosGuardados
   : [
       { username: "Admin", email: "Admin@gmail.com", password: "Admin123!" },
       { username: "Cris", email: "Cris@gmail.com", password: "Cris123!" },
+      { username: "Tomas", email: "a@a.com", password: "a" },
     ];
 
 // Función para agregar un nuevo usuario y actualizar localStorage

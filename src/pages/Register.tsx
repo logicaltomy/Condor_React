@@ -109,7 +109,7 @@ const Register: React.FC = () => { // Declara un componente funcional llamado In
                       {errores.Username && <p className="text-danger">{errores.Username}</p>}
                   </div>
                   <div className="mb-3">
-                      <label htmlFor="password" className="form-label">Contrasenia</label>
+                      <label htmlFor="password" className="form-label">Contraseña</label>
                       <input 
                           type="password" 
                           className="form-control" 

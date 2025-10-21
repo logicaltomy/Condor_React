@@ -35,7 +35,7 @@ const Login: React.FC<LoginProps> = ({setSesionIniciada}) => { // Declara un com
         if (usuarios.find(user => user.email === Correo)) {
             const usuario = usuarios.find(user => user.email === Correo);
             if (usuario && usuario.password !== Contrasenia) {
-                nuevosErrores.Contrasenia = "La Contrasenia es incorrecta.";
+                nuevosErrores.Contrasenia = "La Contraseña es incorrecta.";
             }
         }
 
@@ -86,7 +86,7 @@ const Login: React.FC<LoginProps> = ({setSesionIniciada}) => { // Declara un com
                 {errores.Correo && <p className="text-danger">{errores.Correo}</p>}
             </div>
             <div className="mb-3">
-                <label htmlFor="password" className="form-label">Contrasenia</label>
+                <label htmlFor="password" className="form-label">Contraseña</label>
                 <input 
                     type="password" 
                     className="form-control" 
