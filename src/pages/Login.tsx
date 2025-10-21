@@ -56,7 +56,8 @@ const Login: React.FC<LoginProps> = ({setSesionIniciada}) => { // Declara un com
           setCorreo("");
           setContrasenia("");
           setErrores({ Correo: "", Contrasenia: "" });
-          iniciarSesion();
+          // 1.7.0 - Se ajusta iniciarSesion para que guarde el estado global
+          iniciarSesion(Correo);
           setSesionIniciada(true);
           navigate("/perfil");
           localStorage.setItem("usuarioActual", Correo); // Guardar el usuario actual en localStorage
@@ -98,10 +99,10 @@ const Login: React.FC<LoginProps> = ({setSesionIniciada}) => { // Declara un com
                 />
                 {errores.Contrasenia && <p className="text-danger">{errores.Contrasenia}</p>}
             </div>
-            <button type="submit" className="btn btn-primary" style={{alignItems: "center"}}>
+            <button type="submit" className="btn-condor-submit" style={{alignItems: "center"}}>
                 Entrar
             </button>
-            <Link to="/register" className="btn btn-link">
+            <Link to="/register" className="btn btn-link" style={{display: "block", textAlign: "center", marginTop: "10px", color: "white"}}>
                 ¿No tienes una cuenta? Regístrate
             </Link>
         </form>

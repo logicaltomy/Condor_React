@@ -123,7 +123,7 @@ const Register: React.FC = () => { // Declara un componente funcional llamado In
                       {errores.Contrasenia && <p className="text-danger">{errores.Contrasenia}</p>}
                   </div>
                   <div className="mb-3">
-                      <label htmlFor="confirmarPassword" className="form-label">Confirmar Contrasenia</label>
+                      <label htmlFor="confirmarPassword" className="form-label">Confirmar Contraseña</label>
                       <input 
                           type="password" 
                           className="form-control" 
@@ -136,11 +136,11 @@ const Register: React.FC = () => { // Declara un componente funcional llamado In
                       />
                       {errores.ConfirmarContrasenia && <p className="text-danger">{errores.ConfirmarContrasenia}</p>}
                   </div>
-                  <button type="submit" className="btn btn-primary" style={{alignItems: "center"}}>
+                  <button type="submit" className="btn-condor-submit" style={{alignItems: "center"}}>
                       Registrarse
                   </button>
-                  <Link to="/login" className="btn btn-link">
-                      ¿Ya tienes una cuenta? Inicia Sesion
+                  <Link to="/login" className="btn btn-link"style={{display: "block", textAlign: "center", marginTop: "10px", color: "white"}}>
+                      ¿Ya tienes una cuenta? Inicia Sesión
                   </Link>
               </form>
     </div>

@@ -75,7 +75,6 @@ const [usuarioActual, setUsuarioActual] = useState<User | null>(null); // (null)
           </div>
 
           <div>
-            
             <label className="btn btn-secondary">
               Cambiar foto
               <input type="file" accept="image/*" onChange={handleFotoChange} style={{ display: "none" }} />

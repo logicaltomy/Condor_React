@@ -61,10 +61,6 @@ const Inicio: React.FC = () => { // Declara un componente funcional llamado Inic
     </svg>
     <span>Senderos</span>
   </div>
-
-
-
-
   <div className="icon-item">
     <svg viewBox="0 0 24 24">
       <path fill="#fff" d="M7 3h10l2 4-7 14L5 7l2-4zm2.2 2L7.9 7h8.2l-1.3-2H9.2z"/>
@@ -89,7 +85,7 @@ const Inicio: React.FC = () => { // Declara un componente funcional llamado Inic
         </div>
         <div className="left-card-img-container">
           <img className="left-card-img" src="../src/img/Rutas-Oficiales.png" alt="Rutas" />
-          <button className="btn btn-lg">Ir a Rutas Oficiales</button>
+          <button className="btn-condor-links">Ir a Rutas Oficiales</button>
         </div>
       </div>
       <div className="right-card">
@@ -104,11 +100,11 @@ const Inicio: React.FC = () => { // Declara un componente funcional llamado Inic
         </div>
         <div className="right-card-img-container">
           <img className="right-card-img" src="../src/img/icon-comunity.png" alt="Rutas" />
-          <button className="btn btn-lg">Ir a Rutas Comunitarias</button>
+          <button className="btn-condor-links">Ir a Rutas Comunitarias</button>
         </div>
       </div>
       <br></br>
-        <Link className="btn btn-lg" to="/contacto">
+        <Link className="btn-condor" to="/contacto">
           <img src="../src/img/Contact.png" alt="Contacto" style={{ width: "100px", height: "50px", margin: "-12px -22px -12px -42px"}} />
           Contactanos!
         </Link>

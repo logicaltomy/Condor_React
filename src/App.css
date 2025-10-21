@@ -1,3 +1,72 @@
+
+/* === Botones estilo Cóndor === */
+
+/* Base verde Cóndor */
+.btn-condor {
+  background-color: #206522;
+  border: 2px solid #206522;
+  color: #fff;
+  border-radius: 6px;
+  padding: 10px 24px;
+  font-weight: 600;
+  transition: all 0.2s ease;
+}
+
+.btn-condor:hover,
+.btn-condor:focus {
+  background-color: #1e741e;
+  border-color: #1e741e;
+  color: #fff;
+}
+
+/* Variante para login (derivada de Cóndor) */
+.btn-condor-submit {
+  background-color: #206522;
+  border: 2px solid #206522;
+  color: #fff;
+  border-radius: 6px;
+  padding: 10px 24px;
+  font-weight: 600;
+  width: 70%;
+  display: block;
+  margin: 0 auto;
+  transition: all 0.2s ease;
+}
+
+/* Variante blanca (derivada de Cóndor) */
+.btn-condor-links {
+  background-color: #fff;
+  border: 2px solid #000000;
+  color: #373837;
+  border-radius: 6px;
+  padding: 10px 24px;
+  font-weight: 600;
+  text-decoration: none;
+  display: inline-block;
+  transition: all 0.2s ease;
+  cursor: pointer;
+}
+
+
+
+/* Efectos al pasar el mouse o enfocar */
+.btn-condor-links:hover,
+.btn-condor-links:focus {
+  background-color: #206522;
+  border-color: #000000;
+  color: #fff;
+  text-decoration: none; /* evita subrayado al hacer hover */
+}
+
+/* Estado activo (cuando se hace click) */
+.btn-condor-links:active {
+  background-color: #1e741e;
+  border-color: #1e741e;
+  color: #fff;
+}
+
+
+
 /* Sección tipo card horizontal invertida (texto a la derecha, imagen a la izquierda) */
 .right-card {
   width: 100%;
@@ -127,29 +196,34 @@ se usan en Inicio.tsx
 que están contenidos en el navbar
 se usan en App.tsx (Vendrian siendo los links)
 */
-.btn {
-  background-color: #206522; /* verde */
-  border: none;
-  padding: 10px 20px;
-  margin: 5px;
-  color: white;
-}
+/* === Botones navbar y login en verde, sin romper otros botones === */
 
-.btn-primary:hover {
-  background-color: #1e741e; /* verde más oscuro */
+/* Navbar: sólo los botones dentro de la barra */
+.navbar .btn {
+  background-color: #206522;
+  border-color: #206522;
+  color: #fff;
+}
+.navbar .btn:hover,
+.navbar .btn:focus {
+  background-color: #1e741e;
+  border-color: #1e741e;
   color: #fff;
 }
 
-.btn-lg:hover {
-  background-color: #1e741e; /* verde más oscuro */
+
+/* Navbar en verde oscuro (asegurado) */
+.navbar {
+  background-color: #1e541e;
   color: #fff;
 }
+
 
 .display-4 {
   font-size: 2.5rem;
   font-weight: bold;
   color: black;
-  margin-bottom: 10px;
+  margin-bottom: 20px;
   text-align: center;
 }
 
@@ -296,20 +370,6 @@ form .btn {
   display: block;          /* para poder centrarlo */
   margin: 20px auto 0;     /* centra horizontalmente */
   min-width: 200px;
-}
-
-.btn-link {
-  color: white;
-  text-decoration: underline;
-  background: none;
-  border: none;
-  padding: 0;
-  font: inherit;
-  cursor: pointer;
-}
-
-.btn-link:hover {
-  color: #ddd;
 }
 
 /* Estilos para pagina de perfil */
