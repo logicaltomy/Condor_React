@@ -1,6 +1,8 @@
 import React from "react";
 import { Link} from "react-router-dom";
 
+
+
 const Inicio: React.FC = () => { // Declara un componente funcional llamado Inicio, significa React Functional Component, y le dice a TypeScript que Inicio es un componente de React.
   return (
     <div className="main-content">
@@ -85,7 +87,10 @@ const Inicio: React.FC = () => { // Declara un componente funcional llamado Inic
         </div>
         <div className="left-card-img-container">
           <img className="left-card-img" src="../src/img/Rutas-Oficiales.png" alt="Rutas" />
-          <button className="btn-condor-links">Ir a Rutas Oficiales</button>
+          <Link to={"oficiales"}>
+            <button className="btn-condor-links">Ir a Rutas Oficiales</button>
+          </Link>
+          
         </div>
       </div>
       <div className="right-card">
@@ -100,7 +105,9 @@ const Inicio: React.FC = () => { // Declara un componente funcional llamado Inic
         </div>
         <div className="right-card-img-container">
           <img className="right-card-img" src="../src/img/icon-comunity.png" alt="Rutas" />
+          <Link to={"comunitarias"}>
           <button className="btn-condor-links">Ir a Rutas Comunitarias</button>
+          </Link>
         </div>
       </div>
       <br></br>

@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom"; // <- agrega useNavigate
-import "../App.css";
 import { obtenerUsuarios, actualizarUsuario, type User } from "../User"; // desde la 1.8.0 - importa el helper para actualizarUsuario
 
 import { cerrarSesion } from "../Sesion"; // <- importa el helper para cerrar sesión desde la 1.7.0

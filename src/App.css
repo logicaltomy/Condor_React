@@ -197,12 +197,15 @@ que están contenidos en el navbar
 se usan en App.tsx (Vendrian siendo los links)
 */
 /* === Botones navbar y login en verde, sin romper otros botones === */
-
 /* Navbar: sólo los botones dentro de la barra */
 .navbar .btn {
   background-color: #206522;
   border-color: #206522;
   color: #fff;
+  margin: 0 20px; /* separa los botones horizontalmente */
+}
+.navbar .btn:first-child {
+  margin-left: 0; /* evita espacio extra a la izquierda del primer botón */
 }
 .navbar .btn:hover,
 .navbar .btn:focus {
