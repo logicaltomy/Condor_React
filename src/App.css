@@ -19,6 +19,12 @@
   color: #fff;
 }
 
+.btn-lg{
+  font-size: 1.25rem;
+  margin-top: 10fpx;
+}
+
+
 /* Variante para login (derivada de Cóndor) */
 .btn-condor-submit {
   background-color: #206522;
@@ -304,6 +310,7 @@ se usan en App.tsx (Vendrian siendo los links)
   color: #fff;
   text-align: center;
   padding: 12px 0;
+  margin-top: 10px;
 }
 
 .card {
@@ -344,8 +351,13 @@ se usan en App.tsx (Vendrian siendo los links)
   .navbar-nav {
     align-items: flex-end !important;
     width: 100%;
+    margin-top: 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px; /* 👈 separa los elementos entre sí */
   }
-} 
+}
+
 
 form {
   background: #3d893d;
