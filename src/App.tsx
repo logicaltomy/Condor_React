@@ -8,6 +8,8 @@ import Register from "./pages/Register";
 import Perfil from "./pages/Perfil";
 import Oficiales from "./pages/Oficiales";
 import Comunitarias from "./pages/Comunitarias";
+import RutaDetalle from "./pages/RutaDetalle";
+import Ayuda from "./pages/Ayuda";
 
 import ScrollToTop from "./pages/ScrollToTop";
 import { sesionActiva } from "./Sesion"; 
@@ -76,10 +78,12 @@ function App() {
           <Route path="/nosotros" element={<Nosotros />} />
           <Route path="/oficiales" element={<Oficiales />} /> 
           <Route path="/comunitarias" element={<Comunitarias />} />     
+          <Route path="/rutas/:tipo/:idRuta" element={<RutaDetalle />} />
           <Route path="/contacto" element={<Contacto />} />
           <Route path="/login" element={<Login setSesionIniciada={setSesionIniciada} />} />
           <Route path="/perfil" element={<Perfil setSesionIniciada={setSesionIniciada} />} /> {/* 👈 */}
           <Route path="/register" element={<Register />} />
+          <Route path="/ayuda" element={<Ayuda />} />
         </Routes>
       </div>
 
