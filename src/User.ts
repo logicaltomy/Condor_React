@@ -65,20 +65,23 @@ export const obtenerUsuarios = (): User[] => {
 };
 
 // 1.13.0 - Eliminar usuario por email
-export const eliminarUsuario = (email: string): boolean => {
+export const eliminarUsuario = (email: string) => {
   // normalizar email de entrada
   const objetivo = email.trim().toLowerCase();
   // obtener la lista normalizada de usuarios
   const lista = obtenerUsuarios();
-  const existe = lista.some((u) => u.email.trim().toLowerCase() === objetivo);
-  if (!existe) return false;
 
   // crear una nueva lista sin el usuario y persistir (comparando normalizado)
   const nueva = lista.filter((u) => u.email.trim().toLowerCase() !== objetivo);
   localStorage.setItem("usuarios", JSON.stringify(nueva));
-
-  // actualizar la variable exportada para reflejar el cambio en runtime
-  usuarios = nueva;
-
-  return true;
 };
+
+export const obtenerUsuarioPorEmail = (email: string): Boolean => {
+  const objetivo = email.trim().toLowerCase();
+  const lista = obtenerUsuarios();
+  const encontrado = lista.find((u) => u.email.trim().toLowerCase() === objetivo);
+  if (encontrado) {
+    return true;
+  }
+  return false;
+}

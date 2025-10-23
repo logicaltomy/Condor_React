@@ -112,7 +112,7 @@ const [usuarioActual, setUsuarioActual] = useState<User | null>(null); // (null)
         style={{ marginTop: 16, padding: "8px 20px", borderRadius: 8, fontWeight: "bold" }}
         onClick={() => navigate("/ajustes")}
       >
-        Ir a Ajustes
+        Eliminar Usuario
       </button>
     </div>
   );

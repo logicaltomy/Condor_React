@@ -64,7 +64,7 @@ function App() {
               <li className="nav-item">
                 <Link className="btn btn-lg" to={sesionIniciada ? "/perfil" : "/login"}>
                   Perfil
-                </Link>                
+                </Link>              
               </li>
             </ul>
           </div>
@@ -82,8 +82,8 @@ function App() {
           <Route path="/rutas/:tipo/:idRuta" element={<RutaDetalle />} />
           <Route path="/contacto" element={<Contacto />} />
           <Route path="/login" element={<Login setSesionIniciada={setSesionIniciada} />} />
-          <Route path="/perfil" element={<Perfil setSesionIniciada={setSesionIniciada} />} /> {/* 👈 */}
-          <Route path="/ajustes" element={<Ajustes />} />
+          <Route path="/perfil" element={<Perfil setSesionIniciada={setSesionIniciada} />} />
+          <Route path="/ajustes" element={<Ajustes setSesionIniciada={setSesionIniciada}/>} />
           <Route path="/register" element={<Register />} />
           <Route path="/ayuda" element={<Ayuda />} />
         </Routes>
