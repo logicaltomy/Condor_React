@@ -83,6 +83,8 @@
   min-height: 120px;
   justify-content: space-between;
   background: #ededdc;
+    background: linear-gradient(to top, #b9b9ac, #d7eef4);
+
 }
 
 .right-card-text {
@@ -107,13 +109,15 @@
 }
 /* Sección tipo card horizontal con imagen y botón debajo */
 .left-card {
+  /*gradiente de color*/
   width: 100%;
-  padding: 32px 24px;
+  padding: 20px 24px;
   display: flex;
   align-items: center;
   min-height: 120px;
   justify-content: space-between;
-  background: #d7eef4;
+  background: linear-gradient(to top, #d7eef4, #ffffff);
+
 }
 
 .left-card-text {
@@ -147,7 +151,7 @@
 html, body {
   width: 100%;
   height: 100%;
-  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  font-family: 'Inter', sans-serif;
   background: white;
 }
 
@@ -188,6 +192,8 @@ se usan en Inicio.tsx
   width: 100%; /* ajusta el ancho al contenedor */
   margin: 0px auto 0 auto; /* ajusta el margen superior para compensar el navbar */
   display: block; /* asegura que la imagen se comporte como un bloque */
+  /*para que se muestre la imagen mas arriba*/
+  margin-top: -10px; /* ajusta el margen superior para que la imagen se muestre más arriba */
   object-fit: cover; /* asegura que la imagen cubra el área sin distorsionarse */
 }
 
@@ -354,7 +360,7 @@ se usan en App.tsx (Vendrian siendo los links)
     margin-top: 10px;
     display: flex;
     flex-direction: column;
-    gap: 10px; /* 👈 separa los elementos entre sí */
+    gap: 10px; /* separa los elementos entre sí */
   }
 }
 
@@ -462,3 +468,40 @@ form .btn {
 .perfil-volver:hover {
   text-decoration: underline;
 }
+
+/* === Rutas full-bleed layout ===
+   Imagen a lo ancho y contenido centrado con max-width.
+
+*/
+.ruta-full {
+  max-width: 900px;
+  width: 45%;  
+  margin: 5px auto;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.427);
+  border-radius: 8px;
+  display: block;
+}
+
+.ruta-full .ruta-img {
+  /*para que el alto de la imagen no sea demasiado grande*/
+  width: 100%;
+  /* reducir altura para que la card no sea tan alta; mantener recorte con object-fit */
+  height: 40vh; /* desktop: ~40% viewport height */
+  max-height: 520px; /* evita imágenes excesivamente grandes en pantallas muy altas */
+  object-fit: cover;
+  object-position: center;
+  display: block;
+}
+
+.ruta-full .ruta-body {
+  background: rgba(255,255,255,0.95);
+  padding: 20px 24px;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+}
+
+/* Ajuste para pantallas pequeñas: menos altura y sin superposición tan marcada */
+@media (max-width: 768px) {
+  .ruta-full .ruta-img { height: 30vh; max-height: 360px; }
+  .ruta-full .ruta-body { margin: 0; padding: 14px; border-radius: 0; box-shadow: none; }
+}
+
