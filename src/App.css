@@ -218,6 +218,20 @@ se usan en Inicio.tsx
   opacity: 0.98;
 }
 
+/* ajustes finos en breakpoints */
+@media (max-width: 1200px) {
+  .mountain-overlay { bottom: -12vw; }
+}
+@media (max-width: 992px) {
+  .mountain-overlay { bottom: -10vw; width: 92%; }
+}
+@media (max-width: 768px) {
+  .mountain-overlay { bottom: -8vw; width: 100%; max-height: 32vh; }
+}
+@media (max-width: 480px) {
+  .mountain-overlay { bottom: -6vw; width: 110%; max-height: 28vh; }
+}
+
 .carousel{
     width: 100%; /* ajusta el ancho al contenedor */
     margin: 0;

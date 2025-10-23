@@ -6,10 +6,7 @@ export interface User {
   foto?: string; // Propiedad opcional para la foto de perfil
 }
 
-const usuariosGuardados =
-  typeof window !== 'undefined' && window.localStorage
-    ? window.localStorage.getItem('usuarios')
-    : null
+const usuariosGuardados = localStorage.getItem("usuarios");
 
 export let usuarios: User[] = usuariosGuardados
   ? JSON.parse(usuariosGuardados)
@@ -41,14 +38,47 @@ export const actualizarUsuario = (email: string, cambios: Partial<User>) => {
   usuarios = JSON.parse(localStorage.getItem("usuarios") || "[]");
 };
 
+
+// 1.12.0 - Función para obtener usuarios con normalización de claves antiguas
+/*
+🔹 Define y exporta una función llamada obtenerUsuarios.
+🔹 Su tipo de retorno es un arreglo de User[], es decir, una lista de objetos con la estructura definida por tu interfaz User (por ejemplo: { username, email, password, foto }).
+🔹 El export permite que esta función sea importada desde otros módulos, como Login.tsx o Register.tsx.
+*/ 
 export const obtenerUsuarios = (): User[] => {
+  // Busca en el localStorage la clave "usuarios".
   const datos = localStorage.getItem("usuarios");
+  // Si encuentra datos, los parsea desde JSON; si no, usa el array usuarios por defecto.
   const raw = datos ? JSON.parse(datos) : usuarios;
   // Normalizar posibles claves antiguas (correo/nombre) a las actuales (email/username)
+  // y devolver el array de usuarios con la estructura correcta
   return (raw as any[]).map((u) => ({
+    // Mapea cada objeto u del array raw a un nuevo objeto con las claves normalizadas
     username: u.username ?? u.nombre ?? "",
+    // Usa la clave "username" si existe; si no, usa "nombre"; si ninguna existe, asigna cadena vacía
     email: u.email ?? u.correo ?? "",
+    // Similar para email: usa "email" o "correo"
     password: u.password ?? "",
+    // Incluye la propiedad opcional
     foto: u.foto
   })); // si no hay nada, devuelve los por defecto pero normalizados
+};
+
+// 1.13.0 - Eliminar usuario por email
+export const eliminarUsuario = (email: string): boolean => {
+  // normalizar email de entrada
+  const objetivo = email.trim().toLowerCase();
+  // obtener la lista normalizada de usuarios
+  const lista = obtenerUsuarios();
+  const existe = lista.some((u) => u.email.trim().toLowerCase() === objetivo);
+  if (!existe) return false;
+
+  // crear una nueva lista sin el usuario y persistir (comparando normalizado)
+  const nueva = lista.filter((u) => u.email.trim().toLowerCase() !== objetivo);
+  localStorage.setItem("usuarios", JSON.stringify(nueva));
+
+  // actualizar la variable exportada para reflejar el cambio en runtime
+  usuarios = nueva;
+
+  return true;
 };

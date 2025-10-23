@@ -99,11 +99,21 @@ const [usuarioActual, setUsuarioActual] = useState<User | null>(null); // (null)
             Cerrar Sesión
           </button>
 
+          {/* La opción de eliminar usuario fue movida a la página /ajustes */}
+
           <Link to="/" className="btn btn-link perfil-volver">
             Volver al inicio
           </Link>
         </div>
       </div>
+      {/* boton para ir a ajustes */}
+      <button
+        className="btn btn-secondary perfil-ajustes"
+        style={{ marginTop: 16, padding: "8px 20px", borderRadius: 8, fontWeight: "bold" }}
+        onClick={() => navigate("/ajustes")}
+      >
+        Ir a Ajustes
+      </button>
     </div>
   );
 };

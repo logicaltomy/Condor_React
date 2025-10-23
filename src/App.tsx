@@ -10,6 +10,7 @@ import Oficiales from "./pages/Oficiales";
 import Comunitarias from "./pages/Comunitarias";
 import RutaDetalle from "./pages/RutaDetalle";
 import Ayuda from "./pages/Ayuda";
+import Ajustes from "./pages/Ajustes";
 
 import ScrollToTop from "./pages/ScrollToTop";
 import { sesionActiva } from "./Sesion"; 
@@ -82,6 +83,7 @@ function App() {
           <Route path="/contacto" element={<Contacto />} />
           <Route path="/login" element={<Login setSesionIniciada={setSesionIniciada} />} />
           <Route path="/perfil" element={<Perfil setSesionIniciada={setSesionIniciada} />} /> {/* 👈 */}
+          <Route path="/ajustes" element={<Ajustes />} />
           <Route path="/register" element={<Register />} />
           <Route path="/ayuda" element={<Ayuda />} />
         </Routes>
