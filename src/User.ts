@@ -6,7 +6,10 @@ export interface User {
   foto?: string; // Propiedad opcional para la foto de perfil
 }
 
-const usuariosGuardados = localStorage.getItem("usuarios");
+const usuariosGuardados =
+  typeof window !== 'undefined' && window.localStorage
+    ? window.localStorage.getItem('usuarios')
+    : null
 
 export let usuarios: User[] = usuariosGuardados
   ? JSON.parse(usuariosGuardados)
@@ -40,5 +43,12 @@ export const actualizarUsuario = (email: string, cambios: Partial<User>) => {
 
 export const obtenerUsuarios = (): User[] => {
   const datos = localStorage.getItem("usuarios");
-  return datos ? JSON.parse(datos) : usuarios; // si no hay nada, devuelve los por defecto
+  const raw = datos ? JSON.parse(datos) : usuarios;
+  // Normalizar posibles claves antiguas (correo/nombre) a las actuales (email/username)
+  return (raw as any[]).map((u) => ({
+    username: u.username ?? u.nombre ?? "",
+    email: u.email ?? u.correo ?? "",
+    password: u.password ?? "",
+    foto: u.foto
+  })); // si no hay nada, devuelve los por defecto pero normalizados
 };
