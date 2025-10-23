@@ -147,9 +147,9 @@ const Inicio: React.FC = () => { // Declara un componente funcional llamado Inic
           <img src="../src/img/Contact.png" alt="Contacto" style={{ width: "100px", height: "50px", margin: "-12px -22px -12px -42px"}} />
           Contactanos!
         </Link>
+        <br />
 
-        
-  </div>
+      </div>
   );
 };
 

@@ -398,6 +398,22 @@ se usan en App.tsx (Vendrian siendo los links)
   }
 }
 
+/* Footer: enlaces LinkedIn con colores específicos */
+.footer .footer-links a {
+  color: #fff;
+  text-decoration: none;
+  font-weight: 600;
+}
+.footer .footer-links a.link-tomas {
+  color: #85c0ff; /* LinkedIn blue */
+}
+.footer .footer-links a.link-cristobal {
+  color: #f6d21a; /* amarillo solicitado */
+}
+.footer .footer-links a:hover {
+  text-decoration: underline;
+}
+
 
 form {
   background: #3d893d;

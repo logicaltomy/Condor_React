@@ -91,7 +91,14 @@ function App() {
 
       {/* FOOTER */}
       <footer className="footer text-center py-3 text-white">
-        © 2025 Condor - Todos los derechos reservados
+        <div>© 2025 Condor - Todos los derechos reservados</div>
+        <div className="footer-links" style={{ marginTop: 8 }}>
+          <span>Equipo: </span>
+          <a href="https://www.linkedin.com/in/crist%C3%B3bal-barrientos-30931b2b2/" target="_blank" rel="noopener noreferrer" className="link-cristobal">Cristóbal Barrientos</a>
+
+          <span style={{ margin: '0 6px' }}>|</span>
+          <a href="https://www.linkedin.com/in/tom%C3%A1s-zapata-labra/" target="_blank" rel="noopener noreferrer" className="link-tomas">Tomás Zapata</a>
+        </div>
       </footer>
     </div>
   );
