@@ -12,38 +12,42 @@ import React, { useState } from "react"; //permite manejar valores dinámicos, c
     mensaje: ""
   }); // Estado para manejar errores de validación
 
-  const validarFormulario = () => {
+  const validarFormulario = (overrides?: { nombre?: string; email?: string; mensaje?: string }) => {
+    const nombreVal = overrides?.nombre ?? nombre;
+    const emailVal = overrides?.email ?? email;
+    const mensajeVal = overrides?.mensaje ?? mensaje;
+
     const nuevosErrores = { nombre: "", email: "", mensaje: "" };
-    if (!nombre.trim()) {
+    if (!nombreVal.trim()) {
       nuevosErrores.nombre = "El nombre es obligatorio.";
     }
 
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!email.trim()) {
+    if (!emailVal.trim()) {
       nuevosErrores.email = "El email es obligatorio.";
-    } else if (!emailRegex.test(email)) {
+    } else if (!emailRegex.test(emailVal)) {
       nuevosErrores.email = "El email no es válido.";
     }
 
-    if (!mensaje.trim()) {
+    if (!mensajeVal.trim()) {
       nuevosErrores.mensaje = "El mensaje es obligatorio.";
-    }else if (mensaje.length < 10) {
+    } else if (mensajeVal.length < 10) {
       nuevosErrores.mensaje = "El mensaje debe tener al menos 10 caracteres.";
-    }else if (mensaje.length > 300) {
+    } else if (mensajeVal.length > 300) {
       nuevosErrores.mensaje = "El mensaje no puede exceder los 300 caracteres.";
     }
 
     setErrores(nuevosErrores);
-
+    return nuevosErrores;
   };
 
   // Función que maneja el envío del formulario, evita que la página se recargue y procesa los datos ingresados
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
 
-    validarFormulario();
+    const nuevosErrores = validarFormulario();
 
-    if (!errores.nombre && !errores.email && !errores.mensaje) {
+    if (!nuevosErrores.nombre && !nuevosErrores.email && !nuevosErrores.mensaje) {
       alert(`Gracias ${nombre}, tu mensaje ha sido enviado!`); //Todo lo que pongas dentro de ${} se evalúa y se reemplaza por su valor.
       setNombre("");
       setEmail("");
@@ -78,7 +82,7 @@ import React, { useState } from "react"; //permite manejar valores dinámicos, c
             value={nombre}
             onChange={(e) => {
               setNombre(e.target.value)
-              validarFormulario()
+              validarFormulario({ nombre: e.target.value })
             }} // evento que captura la informacion
           />
           {errores.nombre && <p className="text-danger mt-1">{errores.nombre}</p>}
@@ -94,7 +98,7 @@ import React, { useState } from "react"; //permite manejar valores dinámicos, c
             value={email}
             onChange={(e) => {
               setEmail(e.target.value)
-              validarFormulario()
+              validarFormulario({ email: e.target.value })
             }} // evento que captura la informacion
           />
           {errores.email && <p className="text-danger mt-1">{errores.email}</p>}
@@ -110,7 +114,7 @@ import React, { useState } from "react"; //permite manejar valores dinámicos, c
             rows={4}
             onChange={(e) => {
               setMensaje(e.target.value)
-              validarFormulario()
+              validarFormulario({ mensaje: e.target.value })
             }} // evento que captura la informacion
             maxLength={300} // Limita el número máximo de caracteres a 300
           ></textarea>
