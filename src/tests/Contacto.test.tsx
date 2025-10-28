@@ -51,7 +51,7 @@ describe('Contacto page', () => {
     await waitFor(() => expect(submit.disabled).toBe(false))
 
     fireEvent.click(submit)
-
+5
     await waitFor(() => expect(alertSpy).toHaveBeenCalled())
     // comprobar que los campos se limpiaron
     await waitFor(() => expect((screen.getByLabelText(/nombre/i) as HTMLInputElement).value).toBe(''))

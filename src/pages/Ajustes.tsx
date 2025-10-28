@@ -1,13 +1,13 @@
 import React, { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
-import { eliminarUsuario, obtenerUsuarioPorEmail } from "../User";
+import { useNavigate } from "react-router-dom";
+import { eliminarUsuario } from "../User";
 import { cerrarSesion } from "../Sesion";
 
 type AjustesProps = {
-  setSesionIniciada: React.Dispatch<React.SetStateAction<boolean>>;
+  setSesionIniciada?: React.Dispatch<React.SetStateAction<boolean>>;
 };
 
-const Ajustes: React.FC<AjustesProps> = ( {setSesionIniciada} ) => {
+const Ajustes: React.FC<AjustesProps> = ({ setSesionIniciada }) => {
   const navigate = useNavigate();
   const [emailAEliminar, setEmailAEliminar] = useState("");
   const [mensaje, setMensaje] = useState<string | null>(null);
@@ -27,7 +27,8 @@ const Ajustes: React.FC<AjustesProps> = ( {setSesionIniciada} ) => {
       cerrarSesion();
       navigate("/login", { replace: true });
       setEmailAEliminar("");
-      setSesionIniciada(false);
+      // setSesionIniciada may be omitted in tests or some usages; call only if provided
+      setSesionIniciada?.(false);
     } else {
       setMensaje("Correos no coinciden.");
     }

@@ -2,7 +2,7 @@ import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { render, screen, fireEvent } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
 import Ajustes from '../pages/Ajustes'
-
+// Función auxiliar para renderizar el componente dentro de un MemoryRouter
 const renderAjustes = () => {
   render(
     <MemoryRouter>
@@ -10,7 +10,7 @@ const renderAjustes = () => {
     </MemoryRouter>
   )
 }
-
+// Limpiar localStorage y mocks antes de cada test
 beforeEach(() => {
   localStorage.clear?.()
   vi.restoreAllMocks()
@@ -35,8 +35,8 @@ describe('Ajustes page', () => {
     fireEvent.change(input, { target: { value: 'noexiste@a.com' } })
     fireEvent.click(boton)
 
-    // Debe mostrarse mensaje informando que no se encontró el usuario
-    expect(screen.getByText(/no se encontró un usuario/i)).toBeInTheDocument()
+    // Debe mostrarse mensaje informando que no coincide el correo con el del usuario iniciado
+    expect(screen.getByText(/Correos no coinciden./i)).toBeInTheDocument()
   })
 
   it('elimina un usuario existente y limpia la sesión si corresponde', () => {
