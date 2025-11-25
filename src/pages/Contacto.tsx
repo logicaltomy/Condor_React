@@ -1,32 +1,37 @@
 import React, { useState } from "react"; //permite manejar valores dinámicos, como los campos del formulario
+import contactoService from "../services/contactoService";
 
 // Declara un componente funcional llamado Contacto, significa React Functional Component, y le dice a TypeScript que Home es un componente de React.
   const Contacto: React.FC = () => {
   const [nombre, setNombre] = useState(""); //React actualiza el estado y vuelve a renderizar el componente con el nuevo valor.
-  const [email, setEmail] = useState("");
+  const [correo, setCorreo] = useState("");
   const [mensaje, setMensaje] = useState(""); //useState("") crea un estado inicial vacío para mensaje.
   
   const [errores, setErrores] = useState({
     nombre: "",
-    email: "",
+    correo: "",
     mensaje: ""
   }); // Estado para manejar errores de validación
 
-  const validarFormulario = (overrides?: { nombre?: string; email?: string; mensaje?: string }) => {
+  const [loading, setLoading] = useState(false);
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+
+  const validarFormulario = (overrides?: { nombre?: string; correo?: string; mensaje?: string }) => {
     const nombreVal = overrides?.nombre ?? nombre;
-    const emailVal = overrides?.email ?? email;
+    const correoVal = overrides?.correo ?? correo;
     const mensajeVal = overrides?.mensaje ?? mensaje;
 
-    const nuevosErrores = { nombre: "", email: "", mensaje: "" };
+    const nuevosErrores = { nombre: "", correo: "", mensaje: "" };
     if (!nombreVal.trim()) {
       nuevosErrores.nombre = "El nombre es obligatorio.";
     }
 
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailVal.trim()) {
-      nuevosErrores.email = "El email es obligatorio.";
-    } else if (!emailRegex.test(emailVal)) {
-      nuevosErrores.email = "El email no es válido.";
+    if (!correoVal.trim()) {
+      nuevosErrores.correo = "El correo es obligatorio.";
+    } else if (!emailRegex.test(correoVal)) {
+      nuevosErrores.correo = "El correo no es válido.";
     }
 
     if (!mensajeVal.trim()) {
@@ -42,26 +47,45 @@ import React, { useState } from "react"; //permite manejar valores dinámicos, c
   };
 
   // Función que maneja el envío del formulario, evita que la página se recargue y procesa los datos ingresados
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    setSuccessMessage(null);
+    setErrorMessage(null);
 
     const nuevosErrores = validarFormulario();
 
-    if (!nuevosErrores.nombre && !nuevosErrores.email && !nuevosErrores.mensaje) {
-      alert(`Gracias ${nombre}, tu mensaje ha sido enviado!`); //Todo lo que pongas dentro de ${} se evalúa y se reemplaza por su valor.
+    if (nuevosErrores.nombre || nuevosErrores.correo || nuevosErrores.mensaje) {
+      return;
+    }
+
+    setLoading(true);
+    try {
+      // Llamada al servicio que hace POST al backend de Contacto
+      await contactoService.crearContacto({ nombre, correo, mensaje });
+      setSuccessMessage("Gracias, tu mensaje ha sido enviado correctamente.");
       setNombre("");
-      setEmail("");
+      setCorreo("");
       setMensaje("");
-      setErrores({ nombre: "", email: "", mensaje: "" });
+      setErrores({ nombre: "", correo: "", mensaje: "" });
+      // Limpiar mensajes después de 4 segundos
+      setTimeout(() => setSuccessMessage(null), 4000);
+    } catch (err: any) {
+      const msg = err?.response?.data?.message || "Error al enviar el formulario. Intenta nuevamente.";
+      setErrorMessage(msg);
+      // Limpiar mensaje de error después de 6 segundos
+      setTimeout(() => setErrorMessage(null), 6000);
+    } finally {
+      setLoading(false);
     }
   };
 
   const botonDeshabilitado = 
   !nombre.trim() || 
-  !email.trim() || 
+  !correo.trim() || 
   !mensaje.trim() ||
   !!errores.nombre || 
-  !!errores.email || 
+  !!errores.correo || 
   !!errores.mensaje;
 
   return (
@@ -84,24 +108,26 @@ import React, { useState } from "react"; //permite manejar valores dinámicos, c
               setNombre(e.target.value)
               validarFormulario({ nombre: e.target.value })
             }} // evento que captura la informacion
+            disabled={loading}
           />
           {errores.nombre && <p className="text-danger mt-1">{errores.nombre}</p>}
         </div>
         <div className="mb-3">
           <label htmlFor="email" className="form-label text-white">
-            Email
+            Correo
           </label>
           <input
             type="email"
             id="email"
             className="form-control"
-            value={email}
+            value={correo}
             onChange={(e) => {
-              setEmail(e.target.value)
-              validarFormulario({ email: e.target.value })
+              setCorreo(e.target.value)
+              validarFormulario({ correo: e.target.value })
             }} // evento que captura la informacion
+            disabled={loading}
           />
-          {errores.email && <p className="text-danger mt-1">{errores.email}</p>}
+          {errores.correo && <p className="text-danger mt-1">{errores.correo}</p>}
         </div>
         <div className="mb-3">
           <label htmlFor="mensaje" className="form-label text-white">
@@ -117,13 +143,16 @@ import React, { useState } from "react"; //permite manejar valores dinámicos, c
               validarFormulario({ mensaje: e.target.value })
             }} // evento que captura la informacion
             maxLength={300} // Limita el número máximo de caracteres a 300
+            disabled={loading}
           ></textarea>
           {errores.mensaje && <p className="text-danger mt-1">{errores.mensaje}</p>}
         </div>
-        <button type="submit" className="btn btn-light w-100" disabled={botonDeshabilitado}>
-          Enviar
+        <button type="submit" className="btn btn-light w-100" disabled={botonDeshabilitado || loading}>
+          {loading ? "Enviando..." : "Enviar"}
         </button>
       </form>
+      {successMessage && <div className="alert alert-success mt-3">{successMessage}</div>}
+      {errorMessage && <div className="alert alert-danger mt-3">{errorMessage}</div>}
     </div>
   );
 };
