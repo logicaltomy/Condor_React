@@ -1,4 +1,5 @@
 import React, { useState } from "react"; //permite manejar valores dinámicos, como los campos del formulario
+import contactoService from "../services/contactoService"; // <<-- agregado
 
 // Declara un componente funcional llamado Contacto, significa React Functional Component, y le dice a TypeScript que Home es un componente de React.
   const Contacto: React.FC = () => {
@@ -11,6 +12,10 @@ import React, { useState } from "react"; //permite manejar valores dinámicos, c
     email: "",
     mensaje: ""
   }); // Estado para manejar errores de validación
+
+  // Mensajes de UI
+  const [successMessage, setSuccessMessage] = useState("");
+  const [submitError, setSubmitError] = useState("");
 
   const validarFormulario = (overrides?: { nombre?: string; email?: string; mensaje?: string }) => {
     const nombreVal = overrides?.nombre ?? nombre;
@@ -42,17 +47,35 @@ import React, { useState } from "react"; //permite manejar valores dinámicos, c
   };
 
   // Función que maneja el envío del formulario, evita que la página se recargue y procesa los datos ingresados
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setSuccessMessage("");
+    setSubmitError("");
 
-    const nuevosErrores = validarFormulario();
+    // Validación local (usa tu validarFormulario existente)
+    const valid = validarFormulario();
+    if (!valid) return;
 
-    if (!nuevosErrores.nombre && !nuevosErrores.email && !nuevosErrores.mensaje) {
-      alert(`Gracias ${nombre}, tu mensaje ha sido enviado!`); //Todo lo que pongas dentro de ${} se evalúa y se reemplaza por su valor.
+    try {
+      await contactoService.crearContacto({
+        nombre,
+        correo: email,
+        mensaje,
+      });
+
+      setSuccessMessage("Mensaje enviado correctamente. Gracias por contactarnos.");
+      // limpiar formulario
       setNombre("");
       setEmail("");
       setMensaje("");
       setErrores({ nombre: "", email: "", mensaje: "" });
+    } catch (error: any) {
+      // Mostrar error en UI (intenta leer respuesta del backend)
+      const msg =
+        error?.response?.data?.message ||
+        error?.message ||
+        "Error al enviar el mensaje. Intente nuevamente.";
+      setSubmitError(msg);
     }
   };
 
@@ -124,6 +147,8 @@ import React, { useState } from "react"; //permite manejar valores dinámicos, c
           Enviar
         </button>
       </form>
+      {successMessage && <div className="alert alert-success">{successMessage}</div>}
+      {submitError && <div className="alert alert-danger">{submitError}</div>}
     </div>
   );
 };

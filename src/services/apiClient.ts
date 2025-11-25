@@ -1,4 +1,5 @@
-import axios, { AxiosInstance } from 'axios';
+import axios from 'axios';
+import type { AxiosInstance } from 'axios';
 
 // Crea una instancia Axios con interceptores para token y manejo global de errores.
 export function createApi(baseURL: string): AxiosInstance {
