@@ -1,29 +1,22 @@
-import axios from 'axios';
+import { createApi } from './apiClient';
 
-/**
- * Servicio Axios para el microservicio de Contacto.
- * BaseURL apunta a http://localhost:8085 según configuración del backend.
- */
-const api = axios.create({
-  baseURL: 'http://localhost:8085',
-  headers: { 'Content-Type': 'application/json' }
-});
+// Leer base URL desde variables Vite, con fallback
+const BASE = (import.meta as any).env?.VITE_CONTACTO_API_URL ?? 'http://localhost:8085';
+
+const api = createApi(BASE);
 
 const crearContacto = (data: { nombre: string; correo: string; mensaje: string }) => {
-  // Enviar el payload con la propiedad `correo` que espera el backend.
-  const payload = {
+  // El backend espera { nombre, correo, mensaje }
+  return api.post('/api/v1/contacto', {
     nombre: data.nombre,
     correo: data.correo,
     mensaje: data.mensaje,
-  };
-  return api.post('/api/v1/contacto', payload);
+  });
 };
 
-const listarContactos = () => {
-  return api.get('/api/v1/contacto');
-};
+const listarContactos = () => api.get('/api/v1/contacto');
 
 export default {
   crearContacto,
-  listarContactos
+  listarContactos,
 };
