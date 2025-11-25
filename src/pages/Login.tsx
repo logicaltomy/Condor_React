@@ -2,6 +2,8 @@ import React, { useState } from "react";
 import { obtenerUsuarios } from "../User";
 import { Link, useNavigate } from "react-router-dom";
 import { iniciarSesion } from "../Sesion";
+import usuarioService from "../services/usuarioService";
+import Notification from "../components/Notification";
 
 interface LoginProps {
     setSesionIniciada: React.Dispatch<React.SetStateAction<boolean>>;
@@ -17,54 +19,55 @@ const Login: React.FC<LoginProps> = ({setSesionIniciada}) => { // Declara un com
         Correo: "",
         Contrasenia: ""
       }); // Estado para manejar errores de validación
+    const [notification, setNotification] = React.useState<{type: 'success'|'danger'|'info', message: string} | null>(null);
 
       const validarFormulario = () => {
         const nuevosErrores = { Correo: "", Contrasenia: "" };
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-        const usuarios = obtenerUsuarios();
         if (!Correo.trim()) {
           nuevosErrores.Correo = "El Correo es obligatorio.";
-        }
-        else if (Correo && !emailRegex.test(Correo)) {
+        } else if (Correo && !emailRegex.test(Correo)) {
           nuevosErrores.Correo = "El Correo no es válido.";
         }
-        else if (!usuarios.find(user => user.email === Correo)) {
-          nuevosErrores.Correo = "El Correo no está registrado.";
-        }
 
-        if (usuarios.find(user => user.email === Correo)) {
-            const usuario = usuarios.find(user => user.email === Correo);
-            if (usuario && usuario.password !== Contrasenia) {
-                nuevosErrores.Contrasenia = "La Contraseña es incorrecta.";
-            }
+        if (!Contrasenia.trim()) {
+          nuevosErrores.Contrasenia = "La Contraseña es obligatoria.";
         }
 
         setErrores(nuevosErrores);
         return nuevosErrores;
       };
 
-      const handleSubmit = (e: React.FormEvent) => {
+      const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        const usuarios = obtenerUsuarios();
-
         const nuevosErrores = validarFormulario();
-        const usuario = usuarios.find(user => user.email === Correo);
-        const username = usuario ? usuario.username : "";
+        if (nuevosErrores.Correo || nuevosErrores.Contrasenia) return;
 
-        if (!nuevosErrores.Correo && !nuevosErrores.Contrasenia) {
-          alert(`Gracias ${username}, has iniciado sesion!`); //Todo lo que pongas dentro de ${} se evalúa y se reemplaza por su valor.
+        try {
+          await usuarioService.loginUser({ correo: Correo, password: Contrasenia });
+          // Obtener usuario para mostrar nombre y guardar sesión
+          const resp = await usuarioService.getUserByCorreo(Correo);
+          const usuarioDTO: any = resp.data;
+          const username = usuarioDTO?.nombre ?? Correo;
+
           setCorreo("");
           setContrasenia("");
           setErrores({ Correo: "", Contrasenia: "" });
-          // 1.7.0 - Se ajusta iniciarSesion para que guarde el estado global
           iniciarSesion(Correo);
           setSesionIniciada(true);
           navigate("/perfil");
-          localStorage.setItem("usuarioActual", Correo); // Guardar el usuario actual en localStorage
+          localStorage.setItem("usuarioActual", Correo);
+        } catch (err: any) {
+          const msg = err?.response?.data || err?.message || 'Error de autenticación';
+          setNotification({ type: 'danger', message: String(msg) });
         }
       }
 
     return (
+    <>
+      {notification && (
+        <Notification type={notification.type} message={notification.message} onClose={() => setNotification(null)} />
+      )}
     <div className="main-content" style={{backgroundImage: "url('../src/img/fondo_final.jpeg')", backgroundSize: "cover", minHeight: "100vh", padding: "20px", display: "flex", flexDirection: "column", justifyContent: "center", alignItems: "center"}}>
       <div className="d-flex align-items-center mb-4">
         <img src="../src/img/logo_negro.png" className="logo_forms" alt="logo_forms" style={{marginRight: "20px"}}></img>
@@ -107,6 +110,7 @@ const Login: React.FC<LoginProps> = ({setSesionIniciada}) => { // Declara un com
             </Link>
         </form>
     </div>
+    </>
   );
 }
 

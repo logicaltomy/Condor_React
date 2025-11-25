@@ -1,5 +1,6 @@
-import { obtenerUsuarios, agregarUsuario } from "../User";
-import type { User } from "../User";
+import { obtenerUsuarios } from "../User";
+import usuarioService from "../services/usuarioService";
+import Notification from "../components/Notification";
 import { Link, useNavigate } from "react-router-dom";
 import React, { useState } from "react";
 
@@ -9,6 +10,10 @@ const Register: React.FC = () => {
     const [Contrasenia, setContrasenia] = useState("");
     const [ConfirmarContrasenia, setConfirmarContrasenia] = useState("");
     const [Username, setUsername] = useState("");
+    const [pregunta1, setPregunta1] = useState("¿Cuál es tu color favorito?");
+    const [respuesta1, setRespuesta1] = useState("");
+    const [pregunta2, setPregunta2] = useState("¿Cuál fue el nombre de tu primera mascota?");
+    const [respuesta2, setRespuesta2] = useState("");
 
     const [errores, setErrores] = useState({
         Correo: "",
@@ -16,6 +21,7 @@ const Register: React.FC = () => {
         ConfirmarContrasenia: "",
         Username: ""
     });
+    const [notification, setNotification] = useState<{type: 'success'|'danger'|'info', message: string} | null>(null);
 
     // Función de validación de formulario completa (usada en handleSubmit)
     const validarFormularioCompleto = () => {
@@ -102,26 +108,41 @@ const Register: React.FC = () => {
     };
 
 
-    const handleSubmit = (e: React.FormEvent) => {
+    const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         
         const nuevosErrores = validarFormularioCompleto(); // Usamos la validación completa en el submit
 
         // Guardamos el usuario nuevo si no hay errores
         if (!nuevosErrores.Correo && !nuevosErrores.Contrasenia && !nuevosErrores.ConfirmarContrasenia && !nuevosErrores.Username) {
-            const nuevoUsuario: User = {
-                username: Username,
-                email: Correo,
-                password: Contrasenia
-            };
-            agregarUsuario(nuevoUsuario);
-            setCorreo("");
-            setContrasenia("");
-            setConfirmarContrasenia("");
-            setUsername("");
-            setErrores({ Correo: "", Contrasenia: "", ConfirmarContrasenia: "", Username: "" });
-            navigate("/login");
-            alert(`Gracias ${Username}, te has registrado con exito!`);
+            try {
+                // Construir payload compatible con backend
+                const payload = {
+                    nombre: Username,
+                    correo: Correo,
+                    contrasena: Contrasenia,
+                    idRegion: 1, // default region
+                    idRol: 2, // default rol (usuario)
+                    preguntaSeguridad1: pregunta1,
+                    respuestaSeguridad1: respuesta1,
+                    preguntaSeguridad2: pregunta2,
+                    respuestaSeguridad2: respuesta2
+                };
+
+                await usuarioService.registerUser(payload);
+                setCorreo("");
+                setContrasenia("");
+                setConfirmarContrasenia("");
+                setUsername("");
+                setRespuesta1("");
+                setRespuesta2("");
+                setErrores({ Correo: "", Contrasenia: "", ConfirmarContrasenia: "", Username: "" });
+                setNotification({ type: 'success', message: `Gracias ${Username}, te has registrado con exito!` });
+                setTimeout(() => navigate('/login'), 1200);
+            } catch (err: any) {
+                const msg = err?.response?.data || err?.message || 'Error al registrar';
+                setNotification({ type: 'danger', message: String(msg) });
+            }
         }
     };
 
@@ -168,6 +189,27 @@ const Register: React.FC = () => {
                     {errores.Username && <p className="text-danger">{errores.Username}</p>}
                 </div>
 
+                {/* Preguntas de seguridad */}
+                <div className="mb-3">
+                    <label className="form-label">Pregunta seguridad 1</label>
+                    <select className="form-control" value={pregunta1} onChange={e => setPregunta1(e.target.value)}>
+                        <option>¿Cuál es tu color favorito?</option>
+                        <option>¿Cuál fue el nombre de tu primera escuela?</option>
+                        <option>¿Cuál es el nombre de tu ciudad natal?</option>
+                    </select>
+                    <input className="form-control mt-2" placeholder="Respuesta 1" value={respuesta1} onChange={e => setRespuesta1(e.target.value)} />
+                </div>
+
+                <div className="mb-3">
+                    <label className="form-label">Pregunta seguridad 2</label>
+                    <select className="form-control" value={pregunta2} onChange={e => setPregunta2(e.target.value)}>
+                        <option>¿Cuál fue el nombre de tu primera mascota?</option>
+                        <option>¿Cuál es el segundo nombre de tu padre?</option>
+                        <option>¿Cuál es el nombre de tu mejor amigo de la infancia?</option>
+                    </select>
+                    <input className="form-control mt-2" placeholder="Respuesta 2" value={respuesta2} onChange={e => setRespuesta2(e.target.value)} />
+                </div>
+
                 {/* Contraseña */}
                 <div className="mb-3">
                     <label htmlFor="password" className="form-label">Contraseña</label>
@@ -209,6 +251,9 @@ const Register: React.FC = () => {
                     ¿Ya tienes una cuenta? Inicia Sesión
                 </Link>
             </form>
+            {notification && (
+                <Notification type={notification.type} message={notification.message} onClose={() => setNotification(null)} />
+            )}
         </div>
     );
 }
