@@ -125,7 +125,6 @@ const Register: React.FC = () => {
                     correo: Correo,
                     contrasena: Contrasenia,
                     idRegion: 1, // default region
-                    idRol: 2, // default rol (usuario)
                     preguntaSeguridad1: pregunta1,
                     respuestaSeguridad1: respuesta1,
                     preguntaSeguridad2: pregunta2,

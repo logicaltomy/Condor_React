@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import logo from './img/logo.png';
 import { Routes, Route, Link, Navigate } from "react-router-dom";
 import Home from "./pages/Inicio";
@@ -15,11 +15,14 @@ import Ajustes from "./pages/Ajustes";
 import AdminPanel from "./pages/AdminPanel";
 
 import ScrollToTop from "./pages/ScrollToTop";
+import Moderador from "./pages/Moderador";
+import Auditoria from "./pages/Auditoria";
 import { sesionActiva } from "./Sesion"; 
 
 function App() {
   const [sesionIniciada, setSesionIniciada] = useState(sesionActiva());
   const [isAdmin, setIsAdmin] = useState(false);
+  const [isModerator, setIsModerator] = useState(false);
 
   useEffect(() => {
     // Determinar si el usuario es administrador leyendo el usuario guardado en localStorage
@@ -36,13 +39,17 @@ function App() {
           const rolId = u?.idRol ?? u?.rol?.id ?? null;
           const rolNombre = (u?.rol?.nombre || '').toString().toLowerCase();
           const admin = (rolId === 1) || rolNombre.includes('admin') || rolNombre.includes('administrador');
-          setIsAdmin(Boolean(admin));
+            setIsAdmin(Boolean(admin));
+          // En la BD por defecto el id para Moderador es 2 (Administrador=1, Moderador=2, Usuario=3)
+          const moderator = (rolId === 2) || rolNombre.includes('moder') || rolNombre.includes('moderador');
+            setIsModerator(Boolean(moderator));
           return;
         }
       } catch {
         // ignore parse errors
       }
       setIsAdmin(false);
+      setIsModerator(false);
     };
 
     computeAdmin();
@@ -50,6 +57,10 @@ function App() {
     // Recompute when session changes (login/logout) and when localStorage is updated in another tab
     const onStorage = (ev: StorageEvent) => {
       if (ev.key === 'usuarioDTO' || ev.key === 'sesionIniciada') computeAdmin();
+      // recompute moderator as well
+      if (ev.key === 'usuarioDTO' || ev.key === 'sesionIniciada') {
+        try { const raw = localStorage.getItem('usuarioDTO'); if (raw) { const u = JSON.parse(raw); const rolId = u?.idRol ?? u?.rol?.id ?? null; const rolNombre = (u?.rol?.nombre || '').toString().toLowerCase(); const moderator = (rolId === 2) || rolNombre.includes('moder') || rolNombre.includes('moderador'); setIsModerator(Boolean(moderator)); } else setIsModerator(false);} catch { setIsModerator(false); }
+      }
     };
     window.addEventListener('storage', onStorage);
 
@@ -109,6 +120,16 @@ function App() {
                   <Link className="btn btn-lg" to="/admin">Panel de Administrador</Link>
                 </li>
               )}
+                {isModerator && (
+                  <li className="nav-item">
+                    <Link className="btn btn-lg" to="/moderador">Panel de Moderador</Link>
+                  </li>
+                )}
+                {isModerator && (
+                  <li className="nav-item">
+                    <Link className="btn btn-lg" to="/auditoria">Auditoría</Link>
+                  </li>
+                )}
             </ul>
           </div>
         </div>
@@ -124,6 +145,8 @@ function App() {
           <Route path="/comunitarias" element={<Comunitarias />} />     
           <Route path="/rutas/:tipo/:idRuta" element={<RutaDetalle />} />
           <Route path="/admin" element={isAdmin ? <AdminPanel /> : <Navigate to="/" replace />} />
+          <Route path="/moderador" element={isModerator ? <React.Suspense fallback={<div>Cargando...</div>}><React.Fragment><Moderador /></React.Fragment></React.Suspense> : <Navigate to="/" replace />} />
+          <Route path="/auditoria" element={isModerator ? <Auditoria /> : <Navigate to="/" replace />} />
           <Route path="/contacto" element={<Contacto />} />
           <Route path="/login" element={<Login setSesionIniciada={setSesionIniciada} />} />
           <Route path="/perfil" element={<Perfil setSesionIniciada={setSesionIniciada} />} />
