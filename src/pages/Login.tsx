@@ -4,6 +4,8 @@ import { Link, useNavigate } from "react-router-dom";
 import { iniciarSesion } from "../Sesion";
 import usuarioService from "../services/usuarioService";
 import Notification from "../components/Notification";
+import RecoverPasswordModal from "../components/RecoverPasswordModal";
+import { extractErrorMessage } from '../services/apiClient';
 
 interface LoginProps {
     setSesionIniciada: React.Dispatch<React.SetStateAction<boolean>>;
@@ -20,6 +22,17 @@ const Login: React.FC<LoginProps> = ({setSesionIniciada}) => { // Declara un com
         Contrasenia: ""
       }); // Estado para manejar errores de validación
     const [notification, setNotification] = React.useState<{type: 'success'|'danger'|'info', message: string} | null>(null);
+
+    // Mostrar mensaje de recuperación si viene desde la pantalla de recuperar
+    React.useEffect(() => {
+      const msg = localStorage.getItem('recoveryMessage');
+      if (msg) {
+        setNotification({ type: 'success', message: msg });
+        localStorage.removeItem('recoveryMessage');
+      }
+    }, []);
+
+    const [showRecover, setShowRecover] = useState(false);
 
       const validarFormulario = () => {
         const nuevosErrores = { Correo: "", Contrasenia: "" };
@@ -58,8 +71,8 @@ const Login: React.FC<LoginProps> = ({setSesionIniciada}) => { // Declara un com
           navigate("/perfil");
           localStorage.setItem("usuarioActual", Correo);
         } catch (err: any) {
-          const msg = err?.response?.data || err?.message || 'Error de autenticación';
-          setNotification({ type: 'danger', message: String(msg) });
+          const mensaje = extractErrorMessage(err) || 'Error de autenticación.';
+          setNotification({ type: 'danger', message: mensaje });
         }
       }
 
@@ -108,8 +121,14 @@ const Login: React.FC<LoginProps> = ({setSesionIniciada}) => { // Declara un com
             <Link to="/register" className="btn btn-link" style={{display: "block", textAlign: "center", marginTop: "10px", color: "white"}}>
                 ¿No tienes una cuenta? Regístrate
             </Link>
+            <div style={{ textAlign: 'center', marginTop: 8 }}>
+              <button type="button" onClick={() => setShowRecover(true)} className="btn btn-link" style={{ color: '#c82333', fontWeight: '700' }}>
+                ¿Olvidaste tu contraseña?
+              </button>
+            </div>
         </form>
     </div>
+    <RecoverPasswordModal show={showRecover} onClose={() => setShowRecover(false)} />
     </>
   );
 }

@@ -36,3 +36,23 @@ export function createApi(baseURL: string): AxiosInstance {
 
   return instance;
 }
+
+// Extrae un mensaje de error legible del objeto de error Axios
+export function extractErrorMessage(err: any): string {
+  if (!err) return 'Error desconocido.';
+  // Preferir body.message (backend normalizado)
+  const data = err?.response?.data;
+  if (data) {
+    if (typeof data === 'string') return data;
+    if (typeof data === 'object' && data.message) return String(data.message);
+    // Si es objeto sin campo message, intentar convertir a texto útil
+    try {
+      const json = JSON.stringify(data);
+      if (json && json !== '{}') return json;
+    } catch (e) {
+      // ignore
+    }
+  }
+  if (err?.message) return String(err.message);
+  return 'Error del servidor. Intenta nuevamente.';
+}

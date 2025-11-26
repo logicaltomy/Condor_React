@@ -61,7 +61,7 @@ export const updateRutasRecorridas = (id: number, nuevasRutas: number): Promise<
 };
 
 export const updateFotoPerfil = (id: number, fotoBase64: string): Promise<AxiosResponse<unknown>> => {
-  return api.patch(`/api/v1/usuarios/${id}/foto`, fotoBase64);
+  return api.patch(`/api/v1/usuarios/${id}/foto`, { foto: fotoBase64 });
 };
 
 export const changePassword = (id: number, payload: ChangePasswordPayload): Promise<AxiosResponse<unknown>> => {
@@ -70,6 +70,27 @@ export const changePassword = (id: number, payload: ChangePasswordPayload): Prom
 
 export const deleteUsuario = (id: number): Promise<AxiosResponse<unknown>> => {
   return api.delete(`/api/v1/usuarios/${id}`);
+};
+
+export interface PreguntasResponse {
+  correo: string;
+  pregunta1: string;
+  pregunta2: string;
+}
+
+export const getPreguntas = (correo: string): Promise<AxiosResponse<PreguntasResponse>> => {
+  return api.get('/api/v1/usuarios/preguntas', { params: { correo } });
+};
+
+export interface RecuperacionPayload {
+  correo: string;
+  respuestaSeguridad1: string;
+  respuestaSeguridad2: string;
+  nuevaPassword: string;
+}
+
+export const recuperarContrasena = (payload: RecuperacionPayload): Promise<AxiosResponse<unknown>> => {
+  return api.post('/api/v1/usuarios/recuperar', payload);
 };
 
 export default {

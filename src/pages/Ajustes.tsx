@@ -1,7 +1,9 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { eliminarUsuario } from "../User";
+import usuarioService from "../services/usuarioService";
 import { cerrarSesion } from "../Sesion";
+import Notification from "../components/Notification";
+import { extractErrorMessage } from '../services/apiClient';
 
 type AjustesProps = {
   setSesionIniciada?: React.Dispatch<React.SetStateAction<boolean>>;
@@ -11,26 +13,37 @@ const Ajustes: React.FC<AjustesProps> = ({ setSesionIniciada }) => {
   const navigate = useNavigate();
   const [emailAEliminar, setEmailAEliminar] = useState("");
   const [mensaje, setMensaje] = useState<string | null>(null);
+  const [notification, setNotification] = useState<{type: 'success'|'danger'|'info', message: string} | null>(null);
 
-  const handleEliminar = () => {
+  const handleEliminar = async () => {
     if (!emailAEliminar) {
       setMensaje("Introduce un correo válido.");
       return;
     }
 
-
-    if (emailAEliminar === localStorage.getItem("usuarioActual")) {
-      const ok = window.confirm(`¿Esta seguro de eliminar su cuenta ${emailAEliminar}?`);
-       if (!ok) return;
-      setMensaje(`Usuario ${emailAEliminar} eliminado.`);
-      eliminarUsuario(emailAEliminar);
-      cerrarSesion();
-      navigate("/login", { replace: true });
-      setEmailAEliminar("");
-      // setSesionIniciada may be omitted in tests or some usages; call only if provided
-      setSesionIniciada?.(false);
-    } else {
+    if (emailAEliminar !== localStorage.getItem("usuarioActual")) {
       setMensaje("Correos no coinciden.");
+      return;
+    }
+
+    const ok = window.confirm("¿Esta seguro que quiere desactivar su cuenta?, Esta acción es irreversible.");
+    if (!ok) return;
+
+    try {
+      // Obtener el usuario para extraer su id
+      const resp = await usuarioService.getUserByCorreo(emailAEliminar);
+      const usuario: any = resp.data;
+      if (!usuario?.id) throw new Error('No se pudo obtener id del usuario');
+
+      await usuarioService.deleteUsuario(usuario.id);
+      cerrarSesion();
+      setNotification({ type: 'success', message: `Usuario ${emailAEliminar} desactivado correctamente.` });
+      setEmailAEliminar("");
+      setSesionIniciada?.(false);
+      setTimeout(() => navigate('/login', { replace: true }), 1000);
+    } catch (err: any) {
+      const mensaje = extractErrorMessage(err) || 'Error al eliminar usuario.';
+      setNotification({ type: 'danger', message: mensaje });
     }
   };
 

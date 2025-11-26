@@ -1,6 +1,9 @@
 import React, { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom"; // <- agrega useNavigate
-import { obtenerUsuarios, actualizarUsuario, type User } from "../User"; // desde la 1.8.0 - importa el helper para actualizarUsuario
+import { obtenerUsuarios } from "../User"; // kept for compatibility with older helpers
+import usuarioService from "../services/usuarioService";
+import Notification from "../components/Notification";
+import { extractErrorMessage } from '../services/apiClient';
 
 import { cerrarSesion } from "../Sesion"; // <- importa el helper para cerrar sesión desde la 1.7.0
 
@@ -16,26 +19,32 @@ const navigate = useNavigate(); // <- para redirigir sin recargar
   // se crea una variable reactiva para almacenar la informacion del usuario actual
     // usuarioActual es un objeto que contiene el username y el email, o null si no hay usuario
       // setUsuarioActual es la función para actualizar el estado de usuarioActual y React vuelve a renderizar el componente cuando cambia este estado
-const [usuarioActual, setUsuarioActual] = useState<User | null>(null); // (null) indica que inicialmente no hay usuario cargado
+const [usuarioActual, setUsuarioActual] = useState<any | null>(null); // usuario desde backend
+const [notification, setNotification] = useState<{type: 'success'|'danger'|'info', message: string} | null>(null);
 // cuando se encuentre dicho usuario, se reemplaza el null en cuestión por el objeto con su información
 
 
 // UseEffect se usa para ejecutar código cuando el componente se monta o actualiza
   useEffect(() => {
-    // Busca en el almacenamiento local del navegador (localStorage) el correo del usuario que se guardó al iniciar sesion
     const correoGuardado = localStorage.getItem("usuarioActual");
+    if (!correoGuardado) return;
 
-    // si existe un correo guardado, busca en la lista de usuarios el que coincida con ese correo
-    if (correoGuardado) {
-      // trae la lista de usuarios desde User.ts
-      const usuarios = obtenerUsuarios();
-      // .find recorre la lista de usuarios y devuelve el primero que cumpla la condición (que su email coincida con el correo guardado)
-      const usuarioEncontrado = usuarios.find(user => user.email === correoGuardado);
-      if (usuarioEncontrado) {
-        // si se encuentra el usuario, actualiza el estado usuarioActual con su información
-        setUsuarioActual(usuarioEncontrado);
-      }
-    }
+    // Traer usuario real desde backend
+    usuarioService.getUserByCorreo(correoGuardado)
+      .then(resp => {
+        setUsuarioActual(resp.data);
+      })
+      .catch(err => {
+        // fallback a helper local si falla
+        const usuarios = obtenerUsuarios();
+        const usuarioEncontrado = usuarios.find(user => user.email === correoGuardado);
+        if (usuarioEncontrado) setUsuarioActual(usuarioEncontrado);
+        else {
+          const mensaje = extractErrorMessage(err);
+          // Opcional: mostrar notificación de error al cargar perfil
+          // setNotification({ type: 'danger', message: mensaje });
+        }
+      });
   }, []);
 
 
@@ -52,8 +61,17 @@ const [usuarioActual, setUsuarioActual] = useState<User | null>(null); // (null)
     const reader = new FileReader();
     reader.onload = () => {
       const dataUrl = reader.result as string;
-      actualizarUsuario(usuarioActual.email, { foto: dataUrl });
-      setUsuarioActual({ ...usuarioActual, foto: dataUrl }); // Actualiza vista en tiempo real
+      // Enviar al backend la base64 (la API backend aceptará el dataUrl completo)
+      usuarioService.updateFotoPerfil(usuarioActual.id, dataUrl)
+        .then(resp => {
+          // Actualizamos la vista local
+          setUsuarioActual((prev: any) => ({ ...prev, fotoPerfil: dataUrl }));
+          setNotification({ type: 'success', message: 'Foto de perfil actualizada correctamente.' });
+        })
+        .catch(err => {
+          const mensaje = extractErrorMessage(err) || 'Error al subir foto.';
+          setNotification({ type: 'danger', message: mensaje });
+        });
     };
     reader.readAsDataURL(file);
   };
@@ -66,12 +84,35 @@ const [usuarioActual, setUsuarioActual] = useState<User | null>(null); // (null)
           <h2 className="perfil-titulo">Perfil del Usuario</h2>
 
           <div className="perfil-avatar">
-            {usuarioActual?.foto ? (
-              <img
-                src={usuarioActual.foto}
-                alt="Foto de perfil"
-                style={{ width: 120, height: 120, borderRadius: "50%" }}
-              />
+            {usuarioActual?.fotoPerfil ? (
+              (() => {
+                const foto = usuarioActual.fotoPerfil;
+                let src: string | undefined;
+                if (typeof foto === 'string') {
+                  src = foto.startsWith('data:') ? foto : `data:image/png;base64,${foto}`;
+                } else if (Array.isArray(foto)) {
+                  // convertir array de bytes a base64
+                  try {
+                    const bytes = new Uint8Array(foto as any);
+                    let binary = '';
+                    for (let i = 0; i < bytes.length; i++) {
+                      binary += String.fromCharCode(bytes[i]);
+                    }
+                    const b64 = btoa(binary);
+                    src = `data:image/png;base64,${b64}`;
+                  } catch (e) {
+                    src = undefined;
+                  }
+                } else {
+                  src = `data:image/png;base64,${String(foto)}`;
+                }
+
+                return src ? (
+                  <img src={src} alt="Foto de perfil" style={{ width: 120, height: 120, borderRadius: '50%' }} />
+                ) : (
+                  <div style={{ width: 120, height: 120, borderRadius: '50%', background: '#eee', display: 'grid', placeItems: 'center' }}>👤</div>
+                );
+              })()
             ) : (
               <div style={{ width: 120, height: 120, borderRadius: "50%", background: "#eee", display: "grid", placeItems: "center" }}>👤</div>
             )}
@@ -87,8 +128,10 @@ const [usuarioActual, setUsuarioActual] = useState<User | null>(null); // (null)
           <div className="perfil-info">
           {usuarioActual ? (
             <div className="perfil-info">
-              <p><strong>Nombre:</strong> {usuarioActual.username}</p>
-              <p><strong>Correo:</strong> {usuarioActual.email}</p>
+              <p><strong>Nombre:</strong> {usuarioActual.nombre || usuarioActual.username}</p>
+              <p><strong>Correo:</strong> {usuarioActual.correo || usuarioActual.email}</p>
+              {usuarioActual.rutasRecorridas !== undefined && <p><strong>Rutas recorridas:</strong> {usuarioActual.rutasRecorridas}</p>}
+              {usuarioActual.kmRecorridos !== undefined && <p><strong>KM recorridos:</strong> {usuarioActual.kmRecorridos}</p>}
           </div>
           ) : (
             <p>No se encontró información del usuario. Inicia sesión nuevamente.</p>
@@ -114,6 +157,9 @@ const [usuarioActual, setUsuarioActual] = useState<User | null>(null); // (null)
       >
         Eliminar Usuario
       </button>
+      {notification && (
+        <Notification type={notification.type} message={notification.message} onClose={() => setNotification(null)} />
+      )}
     </div>
   );
 };

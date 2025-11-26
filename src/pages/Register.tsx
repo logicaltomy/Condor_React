@@ -1,6 +1,7 @@
 import { obtenerUsuarios } from "../User";
 import usuarioService from "../services/usuarioService";
 import Notification from "../components/Notification";
+import { extractErrorMessage } from '../services/apiClient';
 import { Link, useNavigate } from "react-router-dom";
 import React, { useState } from "react";
 
@@ -140,8 +141,8 @@ const Register: React.FC = () => {
                 setNotification({ type: 'success', message: `Gracias ${Username}, te has registrado con exito!` });
                 setTimeout(() => navigate('/login'), 1200);
             } catch (err: any) {
-                const msg = err?.response?.data || err?.message || 'Error al registrar';
-                setNotification({ type: 'danger', message: String(msg) });
+                const mensaje = extractErrorMessage(err) || 'Error al registrar.';
+                setNotification({ type: 'danger', message: mensaje });
             }
         }
     };
