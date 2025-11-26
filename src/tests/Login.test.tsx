@@ -1,12 +1,30 @@
+import type { ComponentProps } from 'react'
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { render, screen, fireEvent } from '@testing-library/react'
+import { render, screen, fireEvent, waitFor } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
-import Login from '../pages/Login' // ajusta si tu ruta es distinta
+import Login from '../pages/Login'
+
+const { mockLoginUser, mockGetUserByCorreo } = vi.hoisted(() => ({
+  mockLoginUser: vi.fn(),
+  mockGetUserByCorreo: vi.fn(),
+}))
+
+vi.mock('../services/usuarioService', () => ({
+  __esModule: true,
+  default: {
+    loginUser: mockLoginUser,
+    getUserByCorreo: mockGetUserByCorreo,
+  },
+  loginUser: mockLoginUser,
+  getUserByCorreo: mockGetUserByCorreo,
+}))
+
+type LoginProps = ComponentProps<typeof Login>
 
 // Helpers
-const renderLogin = (overrideProps: Partial<Parameters<typeof Login>[0]> = {}) => {
+const renderLogin = (overrideProps: Partial<LoginProps> = {}) => {
   const setSesionIniciada = vi.fn()
-  const props = { setSesionIniciada, ...overrideProps } as any
+  const props: LoginProps = { setSesionIniciada, ...overrideProps } as LoginProps
 
   render(
     <MemoryRouter>
@@ -17,24 +35,17 @@ const renderLogin = (overrideProps: Partial<Parameters<typeof Login>[0]> = {}) =
 }
 
 beforeEach(() => {
-  // limpiamos el "localStorage" mockeado entre pruebas
   localStorage.clear?.()
+  mockLoginUser.mockReset()
+  mockGetUserByCorreo.mockReset()
 })
 
 describe('Login page', () => {
-  it('renderiza los campos de correo y contraseña y el botón "Entrar"', () => {
+  it('renderiza los campos de correo, contraseña y el botón Entrar', () => {
     renderLogin()
 
-    // Busca por label; si falla, cae al placeholder (por si el componente usa placeholder en vez de label)
-    const email =
-      screen.queryByLabelText(/correo/i) ??
-      screen.getByPlaceholderText(/correo/i)
-
-    const password =
-      screen.queryByLabelText(/contraseña|password/i) ??
-      screen.getByPlaceholderText(/contraseña|password/i)
-
-    // El botón en tu UI se llama "Entrar"
+    const email = screen.getByLabelText(/correo/i)
+    const password = screen.getByLabelText(/contrase/i)
     const submit = screen.getByRole('button', { name: /entrar/i })
 
     expect(email).toBeInTheDocument()
@@ -42,42 +53,36 @@ describe('Login page', () => {
     expect(submit).toBeInTheDocument()
   })
 
-  it('permite escribir email y contraseña y disparar el submit (flujo exitoso)', () => {
-    // Semilla: tu Login valida contra usuarios en localStorage (User.ts).
-    // Creamos un usuario válido para esta prueba:
-    const seedUsers = [
-      { correo: 'test@condor.cl', password: 'Secreta123', nombre: 'Test User' }
-    ]
-    localStorage.setItem('usuarios', JSON.stringify(seedUsers))
+  it('ejecuta el flujo exitoso contra la API y marca la sesión iniciada', async () => {
+    mockLoginUser.mockResolvedValueOnce({ data: {} })
+    mockGetUserByCorreo.mockResolvedValueOnce({ data: { nombre: 'Tester', correo: 'test@condor.cl' } })
 
     const { setSesionIniciada } = renderLogin()
 
-    const email =
-      screen.queryByLabelText(/correo/i) ??
-      screen.getByPlaceholderText(/correo/i)
+    fireEvent.change(screen.getByLabelText(/correo/i), { target: { value: 'test@condor.cl' } })
+    fireEvent.change(screen.getByLabelText(/contrase/i), { target: { value: 'Secreta123' } })
 
-    const password =
-      screen.queryByLabelText(/contraseña|password/i) ??
-      screen.getByPlaceholderText(/contraseña|password/i)
+    fireEvent.click(screen.getByRole('button', { name: /entrar/i }))
 
-    fireEvent.change(email!, { target: { value: 'test@condor.cl' } })
-    fireEvent.change(password!, { target: { value: 'Secreta123' } })
-
-    const submit = screen.getByRole('button', { name: /entrar/i })
-    fireEvent.click(submit)
-
-    // Si tu Login invoca el setter al loguear OK:
-    expect(setSesionIniciada).toHaveBeenCalled()
+    await waitFor(() => {
+      expect(mockLoginUser).toHaveBeenCalledWith({ correo: 'test@condor.cl', password: 'Secreta123' })
+      expect(mockGetUserByCorreo).toHaveBeenCalledWith('test@condor.cl')
+      expect(setSesionIniciada).toHaveBeenCalledWith(true)
+    })
+    expect(localStorage.getItem('usuarioActual')).toBe('test@condor.cl')
   })
 
-  it('si se envía vacío, al menos mantiene el formulario visible (placeholder para validaciones)', () => {
+  it('muestra un mensaje amigable cuando el backend rechaza las credenciales', async () => {
+    mockLoginUser.mockRejectedValueOnce({ response: { status: 401 } })
+
     renderLogin()
 
-    const submit = screen.getByRole('button', { name: /entrar/i })
-    fireEvent.click(submit)
+    fireEvent.change(screen.getByLabelText(/correo/i), { target: { value: 'bad@condor.cl' } })
+    fireEvent.change(screen.getByLabelText(/contrase/i), { target: { value: 'wrong' } })
 
-    // Si aún no tienes mensajes de error implementados, no forcemos el test a fallar.
-    // Al menos verificamos que el formulario principal sigue visible:
-    expect(screen.getByRole('heading', { name: /iniciar sesion/i })).toBeInTheDocument()
+    fireEvent.click(screen.getByRole('button', { name: /entrar/i }))
+
+    await screen.findByText(/correo o contraseña incorrectos/i)
+    expect(mockGetUserByCorreo).not.toHaveBeenCalled()
   })
 })

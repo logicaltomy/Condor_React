@@ -1,68 +1,116 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest'
-import { render, screen, fireEvent } from '@testing-library/react'
+import { render, screen, fireEvent, waitFor } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
 import Ajustes from '../pages/Ajustes'
-// Función auxiliar para renderizar el componente dentro de un MemoryRouter
-const renderAjustes = () => {
+
+const { mockGetUserByCorreo, mockDeleteUsuario, mockUpdateNombre, mockUpdateCorreo, mockCerrarSesion } = vi.hoisted(() => ({
+  mockGetUserByCorreo: vi.fn(),
+  mockDeleteUsuario: vi.fn(),
+  mockUpdateNombre: vi.fn(),
+  mockUpdateCorreo: vi.fn(),
+  mockCerrarSesion: vi.fn(),
+}))
+
+vi.mock('../services/usuarioService', () => ({
+  __esModule: true,
+  default: {
+    getUserByCorreo: mockGetUserByCorreo,
+    deleteUsuario: mockDeleteUsuario,
+    updateNombre: mockUpdateNombre,
+    updateCorreo: mockUpdateCorreo,
+  },
+  getUserByCorreo: mockGetUserByCorreo,
+  deleteUsuario: mockDeleteUsuario,
+  updateNombre: mockUpdateNombre,
+  updateCorreo: mockUpdateCorreo,
+}))
+
+vi.mock('../Sesion', () => ({
+  cerrarSesion: mockCerrarSesion,
+}))
+
+const renderAjustes = (overrideProps: Partial<Parameters<typeof Ajustes>[0]> = {}) => {
+  const setSesionIniciada = vi.fn()
   render(
     <MemoryRouter>
-      <Ajustes />
+      <Ajustes setSesionIniciada={setSesionIniciada} {...overrideProps} />
     </MemoryRouter>
   )
+  return { setSesionIniciada }
 }
-// Limpiar localStorage y mocks antes de cada test
+
 beforeEach(() => {
-  localStorage.clear?.()
   vi.restoreAllMocks()
+  localStorage.clear?.()
+  mockGetUserByCorreo.mockReset()
+  mockDeleteUsuario.mockReset()
+  mockUpdateNombre.mockReset()
+  mockUpdateCorreo.mockReset()
+  mockCerrarSesion.mockReset()
 })
 
 describe('Ajustes page', () => {
-  it('renderiza la sección de eliminar usuario', () => {
+  it('renderiza las secciones principales y precarga los datos del usuario', async () => {
+    localStorage.setItem('usuarioActual', 'user@condor.cl')
+    mockGetUserByCorreo.mockResolvedValue({ data: { nombre: 'User', correo: 'user@condor.cl', id: 42 } })
+
     renderAjustes()
+
     expect(screen.getByText(/eliminar usuario/i)).toBeInTheDocument()
-    expect(screen.getByPlaceholderText(/correo@ejemplo.com/i)).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: /eliminar/i })).toBeInTheDocument()
+    await waitFor(() => {
+      expect(screen.getByDisplayValue('User')).toBeInTheDocument()
+      expect(screen.getByDisplayValue('user@condor.cl')).toBeInTheDocument()
+    })
   })
 
-  it('muestra mensaje cuando se intenta eliminar un usuario inexistente', () => {
+  it('muestra mensaje cuando el correo a eliminar no coincide con la sesión', () => {
+    localStorage.setItem('usuarioActual', 'activo@condor.cl')
     renderAjustes()
 
-    const input = screen.getByPlaceholderText(/correo@ejemplo.com/i)
-    const boton = screen.getByRole('button', { name: /eliminar/i })
-    // mockear confirm para que devuelva true (aceptar)
-    vi.spyOn(window, 'confirm').mockImplementation(() => true)
+    fireEvent.change(screen.getByPlaceholderText(/correo@ejemplo.com/i), { target: { value: 'otro@condor.cl' } })
+    fireEvent.click(screen.getByRole('button', { name: /eliminar/i }))
 
-    fireEvent.change(input, { target: { value: 'noexiste@a.com' } })
-    fireEvent.click(boton)
-
-    // Debe mostrarse mensaje informando que no coincide el correo con el del usuario iniciado
-    expect(screen.getByText(/Correos no coinciden./i)).toBeInTheDocument()
+    expect(screen.getByText(/correos no coinciden/i)).toBeInTheDocument()
   })
 
-  it('elimina un usuario existente y limpia la sesión si corresponde', () => {
-    // Seed con un usuario y session activa
-    const seed = [{ username: 'Elim', email: 'elim@a.com', password: 'pw' }]
-    localStorage.setItem('usuarios', JSON.stringify(seed))
-    // marcar sesión activa como si el usuario estuviera logueado
-    localStorage.setItem('usuarioActual', 'elim@a.com')
+  it('elimina al usuario actual cuando la API responde correctamente', async () => {
+    localStorage.setItem('usuarioActual', 'elim@condor.cl')
+    mockGetUserByCorreo.mockResolvedValue({ data: { id: 12, correo: 'elim@condor.cl', nombre: 'Elim' } })
+    mockDeleteUsuario.mockResolvedValue({})
+    vi.spyOn(window, 'confirm').mockImplementation(() => true)
+
+    const { setSesionIniciada } = renderAjustes()
+
+    fireEvent.change(screen.getByPlaceholderText(/correo@ejemplo.com/i), { target: { value: 'elim@condor.cl' } })
+    fireEvent.click(screen.getByRole('button', { name: /eliminar/i }))
+
+    await waitFor(() => {
+      expect(mockGetUserByCorreo).toHaveBeenCalledWith('elim@condor.cl')
+      expect(mockDeleteUsuario).toHaveBeenCalledWith(12)
+      expect(mockCerrarSesion).toHaveBeenCalled()
+      expect(setSesionIniciada).toHaveBeenCalledWith(false)
+    })
+    await screen.findByText(/desactivado correctamente/i)
+  })
+
+  it('actualiza nombre y correo cuando son distintos en el formulario', async () => {
+    localStorage.setItem('usuarioActual', 'user@condor.cl')
+    mockGetUserByCorreo.mockResolvedValue({ data: { id: 7, nombre: 'User', correo: 'user@condor.cl' } })
 
     renderAjustes()
 
-    // mock de confirm para aceptar la eliminación
-    vi.spyOn(window, 'confirm').mockImplementation(() => true)
+    const nombreInput = (await screen.findByLabelText(/nombre/i)) as HTMLInputElement
+    const correoInput = (await screen.findByLabelText(/correo/i)) as HTMLInputElement
 
-    const input = screen.getByPlaceholderText(/correo@ejemplo.com/i)
-    const boton = screen.getByRole('button', { name: /eliminar/i })
+    fireEvent.change(nombreInput, { target: { value: 'Nuevo Nombre' } })
+    fireEvent.change(correoInput, { target: { value: 'nuevo@condor.cl' } })
 
-    fireEvent.change(input, { target: { value: 'elim@a.com' } })
-    fireEvent.click(boton)
+    fireEvent.click(screen.getByRole('button', { name: /actualizar perfil/i }))
 
-    // Verificar que el usuario fue eliminado del localStorage
-  const stored = JSON.parse(localStorage.getItem('usuarios') || '[]') as Array<Record<string, any>>
-  const found = stored.find((u) => u.email === 'elim@a.com')
-  expect(found).toBeUndefined()
-
-    // Verificar que la sesión fue limpiada (usuarioActual removed or different)
-    expect(localStorage.getItem('usuarioActual')).toBeNull()
+    await waitFor(() => {
+      expect(mockUpdateNombre).toHaveBeenCalledWith(7, 'Nuevo Nombre')
+      expect(mockUpdateCorreo).toHaveBeenCalledWith(7, 'nuevo@condor.cl')
+    })
+    expect(localStorage.getItem('usuarioActual')).toBe('nuevo@condor.cl')
   })
 })

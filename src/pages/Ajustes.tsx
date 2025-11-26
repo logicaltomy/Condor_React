@@ -143,12 +143,12 @@ const Ajustes: React.FC<AjustesProps> = ({ setSesionIniciada }) => {
             <p className="text-muted">Modifica tu nombre y correo desde aquí.</p>
             {notification && <Notification type={notification.type} message={notification.message} />}
             <div style={{ display: 'flex', flexDirection: 'column', gap: 8, maxWidth: 520 }}>
-              <label>Nombre</label>
-              <input type="text" className="form-control" value={nombre} onChange={(e) => setNombre(e.target.value)} maxLength={100} />
+              <label htmlFor="ajustes-nombre">Nombre</label>
+              <input id="ajustes-nombre" type="text" className="form-control" value={nombre} onChange={(e) => setNombre(e.target.value)} maxLength={100} />
               <small className="text-muted">Máximo 100 caracteres.</small>
 
-              <label>Correo</label>
-              <input type="email" className="form-control" value={correo} onChange={(e) => setCorreo(e.target.value)} />
+              <label htmlFor="ajustes-correo">Correo</label>
+              <input id="ajustes-correo" type="email" className="form-control" value={correo} onChange={(e) => setCorreo(e.target.value)} />
 
               <div style={{ display: 'flex', gap: 8, marginTop: 8 }}>
                 <button className="btn btn-primary" onClick={handleActualizarPerfil}>Actualizar perfil</button>

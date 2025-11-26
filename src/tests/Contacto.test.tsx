@@ -3,6 +3,16 @@ import { render, screen, fireEvent, waitFor } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
 import Contacto from '../pages/Contacto'
 
+const { mockCrearContacto } = vi.hoisted(() => ({
+  mockCrearContacto: vi.fn(),
+}))
+
+vi.mock('../services/contactoService', () => ({
+  __esModule: true,
+  default: { crearContacto: mockCrearContacto },
+  crearContacto: mockCrearContacto,
+}))
+
 const renderContacto = () => {
   render(
     <MemoryRouter>
@@ -13,11 +23,10 @@ const renderContacto = () => {
 
 beforeEach(() => {
   localStorage.clear?.()
-  vi.restoreAllMocks()
+  mockCrearContacto.mockReset()
 })
 
 describe('Contacto page', () => {
-  // PRUEBA 1: Renderizado básico — verifica que los campos Nombre, Email, Mensaje y el botón Enviar estén presentes
   it('renderiza los campos y el botón Enviar', () => {
     renderContacto()
 
@@ -32,11 +41,9 @@ describe('Contacto page', () => {
     expect(submit).toBeInTheDocument()
   })
 
-  // PRUEBA 2: Flujo exitoso — llena los campos válidos, envía y verifica que alert sea llamado y los campos se limpien
-  it('permite enviar un mensaje válido (happy path)', async () => {
+  it('envía un mensaje válido y limpia el formulario', async () => {
+    mockCrearContacto.mockResolvedValueOnce({})
     renderContacto()
-
-    const alertSpy = vi.spyOn(window, 'alert').mockImplementation(() => {})
 
     const nombre = screen.getByLabelText(/nombre/i) as HTMLInputElement
     const email = screen.getByLabelText(/email/i) as HTMLInputElement
@@ -47,20 +54,23 @@ describe('Contacto page', () => {
     fireEvent.change(email, { target: { value: 'juan@example.com' } })
     fireEvent.change(mensaje, { target: { value: 'Hola, este es un mensaje de prueba.' } })
 
-    // esperar a que el botón quede habilitado (estado/validaciones asincrónicas)
     await waitFor(() => expect(submit.disabled).toBe(false))
 
     fireEvent.click(submit)
-5
-    await waitFor(() => expect(alertSpy).toHaveBeenCalled())
-    // comprobar que los campos se limpiaron
-    await waitFor(() => expect((screen.getByLabelText(/nombre/i) as HTMLInputElement).value).toBe(''))
-    expect((screen.getByLabelText(/email/i) as HTMLInputElement).value).toBe('')
-    expect((screen.getByLabelText(/mensaje/i) as HTMLTextAreaElement).value).toBe('')
+
+    await waitFor(() => expect(mockCrearContacto).toHaveBeenCalledWith({
+      nombre: 'Juan',
+      correo: 'juan@example.com',
+      mensaje: 'Hola, este es un mensaje de prueba.'
+    }))
+
+    await screen.findByText(/mensaje enviado correctamente/i)
+    expect(nombre.value).toBe('')
+    expect(email.value).toBe('')
+    expect(mensaje.value).toBe('')
   })
 
-  // PRUEBA 3: Validaciones — email inválido, nombre vacío, mensaje corto; mostrar errores y botón deshabilitado
-  it('muestra errores y deshabilita el envío cuando hay validaciones', async () => {
+  it('muestra errores y mantiene el botón deshabilitado cuando hay validaciones', async () => {
     renderContacto()
 
     const nombre = screen.getByLabelText(/nombre/i) as HTMLInputElement
@@ -72,29 +82,33 @@ describe('Contacto page', () => {
     fireEvent.change(email, { target: { value: 'bademail' } })
     fireEvent.change(mensaje, { target: { value: 'short' } })
 
-    // Esperar que aparezcan los errores al resolverse el estado
     await screen.findByText(/el nombre es obligatorio/i)
     await screen.findByText(/el email no es válido/i)
-    await screen.findByText(/el mensaje debe tener al menos 10 caracteres/i)
-
-    // botón deshabilitado
+    await screen.findByText(/al menos 10 caracteres/i)
     await waitFor(() => expect(submit.disabled).toBe(true))
   })
 
-  // PRUEBA 4: Límite de longitud — mensaje mayor a 300 caracteres debe producir mensaje de error
+  it('propaga un error legible cuando la API falla', async () => {
+    mockCrearContacto.mockRejectedValueOnce({ response: { data: { message: 'Servicio no disponible' } } })
+    renderContacto()
+
+    fireEvent.change(screen.getByLabelText(/nombre/i), { target: { value: 'Ana' } })
+    fireEvent.change(screen.getByLabelText(/email/i), { target: { value: 'ana@example.com' } })
+    fireEvent.change(screen.getByLabelText(/mensaje/i), { target: { value: 'Mensaje suficiente para probar.' } })
+
+    fireEvent.click(screen.getByRole('button', { name: /enviar/i }))
+
+    await screen.findByText(/servicio no disponible/i)
+  })
+
   it('muestra error si el mensaje excede 300 caracteres', async () => {
     renderContacto()
 
-    const nombre = screen.getByLabelText(/nombre/i) as HTMLInputElement
-    const email = screen.getByLabelText(/email/i) as HTMLInputElement
-    const mensaje = screen.getByLabelText(/mensaje/i) as HTMLTextAreaElement
-
     const long = 'x'.repeat(301)
-    fireEvent.change(nombre, { target: { value: 'Ana' } })
-    fireEvent.change(email, { target: { value: 'ana@example.com' } })
-    fireEvent.change(mensaje, { target: { value: long } })
+    fireEvent.change(screen.getByLabelText(/nombre/i), { target: { value: 'Ana' } })
+    fireEvent.change(screen.getByLabelText(/email/i), { target: { value: 'ana@example.com' } })
+    fireEvent.change(screen.getByLabelText(/mensaje/i), { target: { value: long } })
 
-    await screen.findByText(/el mensaje no puede exceder los 300 caracteres/i)
+    await screen.findByText(/no puede exceder los 300 caracteres/i)
   })
-
 })

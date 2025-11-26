@@ -26,6 +26,12 @@ const boxStyle: React.CSSProperties = {
 };
 
 const RecoverPasswordModal: React.FC<Props> = ({ show, onClose }) => {
+  const emailInputId = 'recover-email';
+  const pregunta1Id = 'recover-pregunta1';
+  const pregunta2Id = 'recover-pregunta2';
+  const respuesta1Id = 'recover-respuesta1';
+  const respuesta2Id = 'recover-respuesta2';
+  const passwordId = 'recover-password';
   const [step, setStep] = useState<'email' | 'questions'>('email');
   const [correo, setCorreo] = useState('');
   const [pregunta1, setPregunta1] = useState('');
@@ -97,8 +103,9 @@ const RecoverPasswordModal: React.FC<Props> = ({ show, onClose }) => {
           {step === 'email' && (
             <div className="rp-inner">
               <form onSubmit={onRequestPreguntas} className="rp-form">
-                <label style={labelStyle}>Correo</label>
+                <label style={labelStyle} htmlFor={emailInputId}>Correo</label>
                 <input
+                  id={emailInputId}
                   type="email"
                   value={correo}
                   onChange={e => setCorreo(e.target.value)}
@@ -118,8 +125,9 @@ const RecoverPasswordModal: React.FC<Props> = ({ show, onClose }) => {
           {step === 'questions' && (
             <div className="rp-inner">
               <form onSubmit={onSubmitRecovery} className="rp-form">
-                <label style={labelStyle}>{pregunta1}</label>
+                <label style={labelStyle} htmlFor={pregunta1Id}>{pregunta1}</label>
                 <input
+                  id={pregunta1Id}
                   value={respuesta1}
                   onChange={e => setRespuesta1(e.target.value)}
                   required
@@ -128,8 +136,9 @@ const RecoverPasswordModal: React.FC<Props> = ({ show, onClose }) => {
                   className="form-control"
                 />
 
-                <label style={labelStyle}>{pregunta2}</label>
+                <label style={labelStyle} htmlFor={pregunta2Id}>{pregunta2}</label>
                 <input
+                  id={pregunta2Id}
                   value={respuesta2}
                   onChange={e => setRespuesta2(e.target.value)}
                   required
@@ -138,8 +147,9 @@ const RecoverPasswordModal: React.FC<Props> = ({ show, onClose }) => {
                   className="form-control"
                 />
 
-                <label style={labelStyle}>Nueva contraseña</label>
+                <label style={labelStyle} htmlFor={passwordId}>Nueva contraseña</label>
                 <input
+                  id={passwordId}
                   type="password"
                   lang="es"
                   value={nuevaPassword}
