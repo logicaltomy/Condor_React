@@ -3,6 +3,7 @@ import { Link, useNavigate } from "react-router-dom"; // <- agrega useNavigate
 import { obtenerUsuarios } from "../User"; // kept for compatibility with older helpers
 import usuarioService from "../services/usuarioService";
 import Notification from "../components/Notification";
+import logrosService from "../services/logrosService";
 
 import { cerrarSesion } from "../Sesion"; // <- importa el helper para cerrar sesión desde la 1.7.0
 
@@ -20,6 +21,7 @@ const navigate = useNavigate(); // <- para redirigir sin recargar
       // setUsuarioActual es la función para actualizar el estado de usuarioActual y React vuelve a renderizar el componente cuando cambia este estado
 const [usuarioActual, setUsuarioActual] = useState<any | null>(null); // usuario desde backend
 const [notification, setNotification] = useState<{type: 'success'|'danger'|'info', message: string} | null>(null);
+const [logrosGanados, setLogrosGanados] = useState<Array<any>>([]);
 // cuando se encuentre dicho usuario, se reemplaza el null en cuestión por el objeto con su información
 
 
@@ -32,6 +34,8 @@ const [notification, setNotification] = useState<{type: 'success'|'danger'|'info
     usuarioService.getUserByCorreo(correoGuardado)
       .then(resp => {
         setUsuarioActual(resp.data);
+        const id = resp.data?.id ?? resp.data?.idUsuario ?? resp.data?.id_usuario ?? null;
+        if (id) fetchTrofeos(id);
       })
       .catch(err => {
         // fallback a helper local si falla
@@ -40,6 +44,30 @@ const [notification, setNotification] = useState<{type: 'success'|'danger'|'info
         if (usuarioEncontrado) setUsuarioActual(usuarioEncontrado);
       });
   }, []);
+
+  const fetchTrofeos = (idUsuario: number) => {
+    logrosService.obtenerTrofeosPorUsuario(idUsuario)
+      .then((res: any) => setLogrosGanados(res || []))
+      .catch(err => {
+        // No mostrar notificaciones invasivas aquí; fallos de carga de logros son silenciosos.
+        // Dejar el array vacío y registrar para depuración.
+        console.warn('No se pudieron cargar los logros:', err?.message || err);
+        setLogrosGanados([]);
+      });
+  };
+
+  const generarTextoPreview = (template: string, restriccion: any) => {
+    if (!template) return '';
+    const num = (restriccion !== undefined && restriccion !== null) ? String(restriccion) : '';
+    if (template.includes('(n)')) {
+      return template.replace('(n)', num);
+    }
+    // If template has a number, replace first found number
+    const replaced = template.replace(/\d+/, num);
+    if (replaced !== template) return replaced;
+    // else append
+    return `${template} ${num}`.trim();
+  };
 
 
   const handleCerrarSesion = () => {
@@ -126,6 +154,8 @@ const [notification, setNotification] = useState<{type: 'success'|'danger'|'info
               <p><strong>Correo:</strong> {usuarioActual.correo || usuarioActual.email}</p>
               {usuarioActual.rutasRecorridas !== undefined && <p><strong>Rutas recorridas:</strong> {usuarioActual.rutasRecorridas}</p>}
               {usuarioActual.kmRecorridos !== undefined && <p><strong>KM recorridos:</strong> {usuarioActual.kmRecorridos}</p>}
+              {/* Mostrar número de logros conseguidos como texto plano (no notificaciones invasivas) */}
+              <p><strong>Logros conseguidos:</strong> {Array.isArray(logrosGanados) ? logrosGanados.length : 0}</p>
           </div>
           ) : (
             <p>No se encontró información del usuario. Inicia sesión nuevamente.</p>

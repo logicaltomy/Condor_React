@@ -16,7 +16,8 @@ import AdminPanel from "./pages/AdminPanel";
 
 import ScrollToTop from "./pages/ScrollToTop";
 import Moderador from "./pages/Moderador";
-import Auditoria from "./pages/Auditoria";
+import Gestor from "./pages/Gestor";
+import MisLogros from "./pages/MisLogros";
 import { sesionActiva } from "./Sesion"; 
 
 function App() {
@@ -27,9 +28,10 @@ function App() {
   useEffect(() => {
     // Determinar si el usuario es administrador leyendo el usuario guardado en localStorage
     const computeAdmin = () => {
-      // Solo considerar admin si además hay sesión iniciada
+      // Solo considerar admin/monitor si además hay sesión iniciada
       if (!sesionActiva()) {
         setIsAdmin(false);
+        setIsModerator(false);
         return;
       }
       try {
@@ -52,6 +54,9 @@ function App() {
       setIsModerator(false);
     };
 
+    // Escuchar evento personalizado para cambios de sesión (logout desde la app)
+    const onSessionChanged = () => computeAdmin();
+
     computeAdmin();
 
     // Recompute when session changes (login/logout) and when localStorage is updated in another tab
@@ -63,6 +68,7 @@ function App() {
       }
     };
     window.addEventListener('storage', onStorage);
+    window.addEventListener('session-changed', onSessionChanged);
 
     const updatePadding = () => {
       const navbar = document.querySelector(".navbar") as HTMLElement;
@@ -78,6 +84,7 @@ function App() {
     return () => {
       window.removeEventListener("resize", updatePadding);
       window.removeEventListener('storage', onStorage);
+      window.removeEventListener('session-changed', onSessionChanged);
     };
 
   }, [sesionIniciada]);
@@ -117,18 +124,18 @@ function App() {
               </li>
               {isAdmin && (
                 <li className="nav-item">
-                  <Link className="btn btn-lg" to="/admin">Panel de Administrador</Link>
+                  <Link className="btn btn-lg btn-secondary" to="/admin">Panel de Administrador</Link>
                 </li>
               )}
                 {isModerator && (
                   <li className="nav-item">
-                    <Link className="btn btn-lg" to="/moderador">Panel de Moderador</Link>
-                  </li>
+                      <Link className="btn btn-lg btn-secondary" to="/moderador">Panel de Moderador</Link>
+                    </li>
                 )}
                 {isModerator && (
                   <li className="nav-item">
-                    <Link className="btn btn-lg" to="/auditoria">Auditoría</Link>
-                  </li>
+                      <Link className="btn btn-lg btn-secondary" to="/gestor">Gestor</Link>
+                    </li>
                 )}
             </ul>
           </div>
@@ -146,8 +153,9 @@ function App() {
           <Route path="/rutas/:tipo/:idRuta" element={<RutaDetalle />} />
           <Route path="/admin" element={isAdmin ? <AdminPanel /> : <Navigate to="/" replace />} />
           <Route path="/moderador" element={isModerator ? <React.Suspense fallback={<div>Cargando...</div>}><React.Fragment><Moderador /></React.Fragment></React.Suspense> : <Navigate to="/" replace />} />
-          <Route path="/auditoria" element={isModerator ? <Auditoria /> : <Navigate to="/" replace />} />
+          <Route path="/gestor" element={isModerator ? <Gestor /> : <Navigate to="/" replace />} />
           <Route path="/contacto" element={<Contacto />} />
+          <Route path="/mis-logros" element={<MisLogros />} />
           <Route path="/login" element={<Login setSesionIniciada={setSesionIniciada} />} />
           <Route path="/perfil" element={<Perfil setSesionIniciada={setSesionIniciada} />} />
           <Route path="/ajustes" element={<Ajustes setSesionIniciada={setSesionIniciada}/>} />

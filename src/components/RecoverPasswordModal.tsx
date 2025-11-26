@@ -13,7 +13,7 @@ const modalStyle: React.CSSProperties = {
   left: 0,
   width: '100%',
   height: '100%',
-  backgroundColor: 'rgba(0,0,0,0.5)',
+  backgroundColor: 'rgba(0,0,0,0.45)',
   display: 'flex',
   alignItems: 'center',
   justifyContent: 'center',
@@ -21,8 +21,8 @@ const modalStyle: React.CSSProperties = {
 };
 
 const boxStyle: React.CSSProperties = {
-  width: 420,
-  maxWidth: '92%',
+  width: 480,
+  maxWidth: '94%',
 };
 
 const RecoverPasswordModal: React.FC<Props> = ({ show, onClose }) => {
@@ -82,26 +82,21 @@ const RecoverPasswordModal: React.FC<Props> = ({ show, onClose }) => {
   };
 
   // estilo simplificado: caja blanca con panel verde interior (similar al perfil original)
-  const innerPanelStyle: React.CSSProperties = {
-    background: '#2e8b3a', // verde parecido al tema
-    padding: '14px',
-    borderRadius: 8,
-    width: '80%',
-    margin: '8px auto',
-    color: '#fff',
-  };
-
   const labelStyle: React.CSSProperties = { display: 'block', marginBottom: 6 };
 
   return (
     <div style={modalStyle} role="dialog" aria-modal="true">
-      <div style={boxStyle}>
-        <div style={{ background: '#fff', padding: 12, borderRadius: 10, minHeight: 120 }}>
-          <h3 style={{ color: '#c82333', textAlign: 'center', marginTop: 0 }}>Recuperar contraseña</h3>
+      <div style={boxStyle} className="rp-modal-box">
+        <div className="rp-modal-header">
+          <h4>Recuperar contraseña</h4>
+          <button className="btn-close" aria-label="Cerrar" onClick={onClose}></button>
+        </div>
+        <div className="rp-modal-body">
           {notif && <Notification type={notif.type} message={notif.message} onClose={() => setNotif(null)} />}
+
           {step === 'email' && (
-            <form onSubmit={onRequestPreguntas}>
-              <div style={innerPanelStyle}>
+            <div className="rp-inner">
+              <form onSubmit={onRequestPreguntas} className="rp-form">
                 <label style={labelStyle}>Correo</label>
                 <input
                   type="email"
@@ -110,19 +105,19 @@ const RecoverPasswordModal: React.FC<Props> = ({ show, onClose }) => {
                   required
                   onInvalid={(e: any) => e.currentTarget.setCustomValidity('Por favor ingrese un correo válido.')}
                   onInput={(e: any) => e.currentTarget.setCustomValidity('')}
-                  style={{ width: '100%', padding: '8px', borderRadius: 4, border: 'none' }}
+                  className="form-control"
                 />
-                <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8, marginTop: 8 }}>
-                  <button type="button" onClick={onClose} style={{ background: '#6c757d', color: '#fff', border: 'none', padding: '8px 12px', borderRadius: 4 }}>Cancelar</button>
-                  <button type="submit" disabled={loading} style={{ background: '#007bff', color: '#fff', border: 'none', padding: '8px 12px', borderRadius: 4 }}>Siguiente</button>
+                <div className="rp-actions">
+                  <button type="button" className="btn btn-secondary" onClick={onClose}>Cancelar</button>
+                  <button type="submit" disabled={loading} className="btn btn-primary">Siguiente</button>
                 </div>
-              </div>
-            </form>
+              </form>
+            </div>
           )}
 
           {step === 'questions' && (
-            <form onSubmit={onSubmitRecovery}>
-              <div style={innerPanelStyle}>
+            <div className="rp-inner">
+              <form onSubmit={onSubmitRecovery} className="rp-form">
                 <label style={labelStyle}>{pregunta1}</label>
                 <input
                   value={respuesta1}
@@ -130,7 +125,7 @@ const RecoverPasswordModal: React.FC<Props> = ({ show, onClose }) => {
                   required
                   onInvalid={(e: any) => e.currentTarget.setCustomValidity('Por favor responda la pregunta.')}
                   onInput={(e: any) => e.currentTarget.setCustomValidity('')}
-                  style={{ width: '100%', padding: '8px', borderRadius: 4, border: 'none', marginBottom: 8 }}
+                  className="form-control"
                 />
 
                 <label style={labelStyle}>{pregunta2}</label>
@@ -140,7 +135,7 @@ const RecoverPasswordModal: React.FC<Props> = ({ show, onClose }) => {
                   required
                   onInvalid={(e: any) => e.currentTarget.setCustomValidity('Por favor responda la pregunta.')}
                   onInput={(e: any) => e.currentTarget.setCustomValidity('')}
-                  style={{ width: '100%', padding: '8px', borderRadius: 4, border: 'none', marginBottom: 8 }}
+                  className="form-control"
                 />
 
                 <label style={labelStyle}>Nueva contraseña</label>
@@ -171,15 +166,15 @@ const RecoverPasswordModal: React.FC<Props> = ({ show, onClose }) => {
                     }
                   }}
                   onInput={(e: any) => e.currentTarget.setCustomValidity('')}
-                  style={{ width: '100%', padding: '8px', borderRadius: 4, border: 'none', marginBottom: 8 }}
+                  className="form-control"
                 />
 
-                <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8 }}>
-                  <button type="button" onClick={onClose} style={{ background: '#6c757d', color: '#fff', border: 'none', padding: '8px 12px', borderRadius: 4 }}>Cancelar</button>
-                  <button type="submit" disabled={loading} style={{ background: '#dc3545', color: '#fff', border: 'none', padding: '8px 12px', borderRadius: 4 }}>Restablecer</button>
+                <div className="rp-actions">
+                  <button type="button" className="btn btn-secondary" onClick={() => setStep('email')}>Volver</button>
+                  <button type="submit" disabled={loading} className="btn btn-danger">Restablecer</button>
                 </div>
-              </div>
-            </form>
+              </form>
+            </div>
           )}
         </div>
       </div>

@@ -35,6 +35,18 @@ const AdminPanel: React.FC = () => {
     setShowForm(true);
   };
 
+  const handleDelete = (r: RutaDto) => {
+    if (!r?.idRuta) return;
+    if (!window.confirm(`¿Eliminar la ruta "${r.nombre}"? Esta acción es irreversible.`)) return;
+    rutaService.deleteRuta(r.idRuta)
+      .then(() => {
+        setNotif({ type: 'success', message: 'Ruta eliminada.' });
+        // quitar de la lista localmente
+        setRutas(prev => prev.filter(x => x.idRuta !== r.idRuta));
+      })
+      .catch(err => setNotif({ type: 'danger', message: err?.response?.data?.message || err?.message || 'Error al eliminar ruta' }));
+  };
+
   const handleFormCancel = () => {
     setShowForm(false);
     setEditing(null);
@@ -69,14 +81,15 @@ const AdminPanel: React.FC = () => {
             const key = r.idRuta !== undefined && r.idRuta !== null ? String(r.idRuta) : `r-${i}`;
             const src = r.foto && r.foto.length > 0 ? r.foto[0] : null;
             return (
-              <div key={key} className="col-12 col-md-6">
-                <div className="card">
+              <div key={key} className="col-12 col-md-8 mx-auto">
+                <div className="card admin-card">
                   {src ? <img src={src} className="card-img-top" alt={r.nombre} /> : null}
                   <div className="card-body">
                     <h5 className="card-title">{r.nombre}</h5>
                     <p>{r.descripcion}</p>
                     <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
                       <button className="btn btn-sm btn-outline-primary" onClick={() => handleEdit(r)}>Editar</button>
+                      <button className="btn btn-sm btn-outline-danger" onClick={() => handleDelete(r)}>Eliminar</button>
                     </div>
                   </div>
                 </div>
