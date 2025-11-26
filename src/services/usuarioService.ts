@@ -93,6 +93,14 @@ export const recuperarContrasena = (payload: RecuperacionPayload): Promise<Axios
   return api.post('/api/v1/usuarios/recuperar', payload);
 };
 
+export const getRegiones = (): Promise<AxiosResponse<any[]>> => {
+  return api.get('/api/v1/regiones');
+};
+
+export const getEstados = (): Promise<AxiosResponse<any[]>> => {
+  return api.get('/api/v1/estados');
+};
+
 export default {
   registerUser,
   loginUser,
@@ -105,4 +113,6 @@ export default {
   updateFotoPerfil,
   changePassword,
   deleteUsuario,
+  getRegiones,
+  getEstados,
 };

@@ -1,7 +1,9 @@
 import React from "react";
 import { Link } from "react-router-dom";
-import { obtenerRutas } from "../Ruta";
-import type { Ruta } from "../Ruta";
+import rutaService from "../services/rutaService";
+import type { RutaDto } from "../services/rutaService";
+import { extractErrorMessage } from '../services/apiClient';
+import { useEffect, useState } from 'react';
 
 /// Función para obtener la clase CSS del badge según la dificultad
 const badgeClass = (dif: Ruta["dificultad"]) => {
@@ -25,9 +27,60 @@ const stars = (n: number | undefined) => {
 
 // Componente principal para mostrar las rutas oficiales
 const RutasOficiales: React.FC = () => {
-  const rutas = obtenerRutas().filter((r) => r.tipo === "OFICIAL");
+  const [rutas, setRutas] = useState<RutaDto[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  
 
-  // Retorno del componente con la estructura JSX
+  useEffect(() => {
+    let mounted = true;
+    setLoading(true);
+    Promise.all([rutaService.getAllTipos(), rutaService.getAllRutas()])
+      .then(async ([tRes, rRes]) => {
+        if (!mounted) return;
+        const tiposList = tRes.data || [];
+        const all = rRes.data || [];
+        const oficialTipo = tiposList.find((x: { id_tipo?: number; nombre?: string }) => ((x.nombre || '').toString().toUpperCase() === 'OFICIAL' || (x.nombre || '').toString().toUpperCase() === 'PRIVADA'));
+        let oficiales: RutaDto[] = [];
+        if (oficialTipo && oficialTipo.id_tipo) {
+          oficiales = all.filter((r: RutaDto) => Number(r.id_tipo) === Number(oficialTipo.id_tipo) && (r.activo ?? true));
+        } else {
+          oficiales = (all || []).filter((r: RutaDto) => (r.tipo || '').toUpperCase() === 'OFICIAL' && (r.activo ?? true));
+        }
+
+        // backend returns foto URLs inside the ruta response now; use them directly
+        setRutas(oficiales);
+      })
+      .catch(err => { if (!mounted) return; setError(extractErrorMessage(err)); })
+      .finally(() => { if (!mounted) return; setLoading(false); });
+    return () => { mounted = false; };
+  }, []);
+
+  const rutaItems = !loading && !error ? rutas.map((r, i) => {
+    const key = r.idRuta !== undefined && r.idRuta !== null ? String(r.idRuta) : `r-${i}`;
+    const src = r.foto && r.foto.length > 0 ? r.foto[0] : null;
+    return (
+      <div key={key} className="ruta-full">
+        <Link to={`/rutas/oficiales/${r.idRuta}`} className="text-decoration-none" aria-label={`Ver detalle ${r.nombre}`}>
+          {src ? <img className="ruta-img" src={src} alt={r.nombre} /> : null}
+        </Link>
+        <div className="ruta-body">
+          <h3>{r.nombre}</h3>
+          <p>
+            Dificultad: <span className={badgeClass(r.dificultad)}>{r.dificultad}</span>
+          </p>
+          <p>
+            Distancia: <strong>{r.distancia !== undefined && r.distancia !== null ? `${Number(r.distancia).toFixed(2)} km` : 'N/D'}</strong>
+          </p>
+          <p className="text-warning" aria-label={`${r.promCalificacion ?? 0} de 5 estrellas`}>
+            {stars(r.promCalificacion)} <span className="text-muted">({((r.promCalificacion ?? 0) as number).toFixed(1)})</span>
+          </p>
+          <p>{r.descripcion}</p>
+        </div>
+      </div>
+    );
+  }) : null;
+
   return (
     <div className="main-content container py-4">
       <div className="text-center mb-4">
@@ -38,31 +91,9 @@ const RutasOficiales: React.FC = () => {
       </div>
 
       <div className="row g-4 justify-content-center">
-        {(() => {
-          // Construimos un array de elementos usando un for para permitir
-          const elementos: React.ReactElement[] = [];
-          // Recorremos las rutas oficiales
-          for (const r of rutas) {
-            elementos.push(
-              <div key={r.idRuta} className="ruta-full">
-                <Link to={`/rutas/oficiales/${r.idRuta}`} className="text-decoration-none" aria-label={`Ver detalle ${r.nombre}`}>
-                  <img className="ruta-img" src={r.foto[0]} alt={r.nombre} />
-                </Link>
-                <div className="ruta-body">
-                  <h3>{r.nombre}</h3>
-                  <p>
-                    Dificultad: <span className={badgeClass(r.dificultad)}>{r.dificultad}</span>
-                  </p>
-                  <p className="text-warning" aria-label={`${r.promCalificacion ?? 0} de 5 estrellas`}>
-                    {stars(r.promCalificacion)} <span className="text-muted">({((r.promCalificacion ?? 0) as number).toFixed(1)})</span>
-                  </p>
-                  <p>{r.descripcion}</p>
-                </div>
-              </div>
-            );
-          }
-          return elementos;
-        })()}
+        {loading && <div>Cargando rutas...</div>}
+        {!loading && error && <div className="text-danger">{error}</div>}
+        {!loading && !error && rutaItems}
       </div>
 
       <div className="text-center mt-4">

@@ -1,11 +1,13 @@
 import React, { useState } from "react";
+import logoNegro from '../img/logo_negro.png';
+import fondo from '../img/fondo_final.jpeg';
 import { obtenerUsuarios } from "../User";
 import { Link, useNavigate } from "react-router-dom";
 import { iniciarSesion } from "../Sesion";
 import usuarioService from "../services/usuarioService";
+import { extractErrorMessage } from '../services/apiClient';
 import Notification from "../components/Notification";
 import RecoverPasswordModal from "../components/RecoverPasswordModal";
-import { extractErrorMessage } from '../services/apiClient';
 
 interface LoginProps {
     setSesionIniciada: React.Dispatch<React.SetStateAction<boolean>>;
@@ -63,6 +65,11 @@ const Login: React.FC<LoginProps> = ({setSesionIniciada}) => { // Declara un com
           const usuarioDTO: any = resp.data;
           const username = usuarioDTO?.nombre ?? Correo;
 
+          // Guardar información de usuario en localStorage para mostrar role/admin
+          try {
+            localStorage.setItem('usuarioDTO', JSON.stringify(usuarioDTO || { correo: Correo }));
+          } catch (e) {}
+
           setCorreo("");
           setContrasenia("");
           setErrores({ Correo: "", Contrasenia: "" });
@@ -71,8 +78,21 @@ const Login: React.FC<LoginProps> = ({setSesionIniciada}) => { // Declara un com
           navigate("/perfil");
           localStorage.setItem("usuarioActual", Correo);
         } catch (err: any) {
-          const mensaje = extractErrorMessage(err) || 'Error de autenticación.';
-          setNotification({ type: 'danger', message: mensaje });
+          // Prefer a friendly message based on HTTP status, otherwise extract text
+          const status = err?.response?.status;
+          let userMessage = '';
+          if (status === 401) {
+            userMessage = 'Correo o contraseña incorrectos.';
+          } else if (status === 404) {
+            userMessage = 'Usuario no encontrado.';
+          } else if (status === 400) {
+            userMessage = extractErrorMessage(err) || 'Solicitud inválida.';
+          } else if (status >= 500) {
+            userMessage = 'Error del servidor. Intenta nuevamente más tarde.';
+          } else {
+            userMessage = extractErrorMessage(err) || 'Error de autenticación.';
+          }
+          setNotification({ type: 'danger', message: userMessage });
         }
       }
 
@@ -81,9 +101,9 @@ const Login: React.FC<LoginProps> = ({setSesionIniciada}) => { // Declara un com
       {notification && (
         <Notification type={notification.type} message={notification.message} onClose={() => setNotification(null)} />
       )}
-    <div className="main-content" style={{backgroundImage: "url('../src/img/fondo_final.jpeg')", backgroundSize: "cover", minHeight: "100vh", padding: "20px", display: "flex", flexDirection: "column", justifyContent: "center", alignItems: "center"}}>
+    <div className="main-content" style={{backgroundImage: `url(${fondo})`, backgroundSize: "cover", minHeight: "100vh", padding: "20px", display: "flex", flexDirection: "column", justifyContent: "center", alignItems: "center"}}>
       <div className="d-flex align-items-center mb-4">
-        <img src="../src/img/logo_negro.png" className="logo_forms" alt="logo_forms" style={{marginRight: "20px"}}></img>
+        <img src={logoNegro} className="logo_forms" alt="logo_forms" style={{marginRight: "20px"}} />
         <h1>CONDOR</h1>
       </div>
         <form onSubmit={handleSubmit} className="w-100">

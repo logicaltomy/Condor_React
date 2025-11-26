@@ -1,9 +1,11 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { obtenerRutas } from "../Ruta";
-import type { Ruta } from "../Ruta";
+import rutaService from "../services/rutaService";
+import type { RutaDto } from "../services/rutaService";
+import { extractErrorMessage } from '../services/apiClient';
+import Notification from "../components/Notification";
 
-const badgeClass = (dif: Ruta["dificultad"]) => {
+const badgeClass = (dif?: string) => {
   switch (dif) {
     case "FACIL":
       return "badge bg-success";
@@ -13,6 +15,8 @@ const badgeClass = (dif: Ruta["dificultad"]) => {
     case "DIFICIL":
     case "EXTREMO":
       return "badge bg-danger";
+    default:
+      return "badge bg-secondary";
   }
 };
 
@@ -22,7 +26,64 @@ const stars = (n: number | undefined) => {
 };
 
 const RutasComunitarias: React.FC = () => {
-  const rutas = obtenerRutas().filter((r) => r.tipo === "COMUNITARIA");
+  const [rutas, setRutas] = useState<RutaDto[]>([]);
+  const [loading, setLoading] = useState(true);
+  // tipos catalog loaded transiently for filtering
+  const [notif, setNotif] = useState<{ type: 'success'|'danger'|'info', message: string } | null>(null);
+
+  useEffect(() => {
+    let mounted = true;
+    setLoading(true);
+    Promise.all([rutaService.getAllTipos(), rutaService.getAllRutas()])
+      .then(async ([tRes, rRes]) => {
+        if (!mounted) return;
+        const tiposList = tRes.data || [];
+        const all: RutaDto[] = rRes.data || [];
+        // Try to map by id_tipo using catalog; fallback to string 'tipo' matching
+        const comunitariaTipo = tiposList.find((x: { id_tipo?: number; nombre?: string }) => ((x.nombre || '').toString().toUpperCase() === 'COMUNITARIA' || (x.nombre || '').toString().toUpperCase() === 'PUBLICA'));
+        let comunitarias: RutaDto[] = [];
+        if (comunitariaTipo && comunitariaTipo.id_tipo) {
+          comunitarias = all.filter(r => Number(r.id_tipo) === Number(comunitariaTipo.id_tipo) && (r.activo ?? true));
+        } else {
+          comunitarias = all.filter(r => (r.tipo || '').toUpperCase() === 'COMUNITARIA' && (r.activo ?? true));
+        }
+
+        // backend now returns foto URLs in the ruta response (ruta.foto), so use them directly
+        setRutas(comunitarias);
+      })
+      .catch(err => {
+        const m = extractErrorMessage(err);
+        setNotif({ type: 'danger', message: m });
+      })
+      .finally(() => setLoading(false));
+
+    return () => { mounted = false; };
+  }, []);
+
+  const rutaItems = !loading ? rutas.map((r, i) => {
+    const key = r.idRuta !== undefined && r.idRuta !== null ? String(r.idRuta) : `r-${i}`;
+    const src = r.foto && r.foto.length > 0 ? r.foto[0] : null;
+    return (
+      <div key={key} className="ruta-full">
+        <Link to={`/rutas/comunitarias/${r.idRuta}`} className="text-decoration-none" aria-label={`Ver detalle ${r.nombre}`}>
+          {src ? <img className="ruta-img" src={src} alt={r.nombre} /> : null}
+        </Link>
+        <div className="ruta-body">
+          <h3>{r.nombre}</h3>
+          <p>
+            Dificultad: <span className={badgeClass(r.dificultad)}>{r.dificultad}</span>
+          </p>
+          <p>
+            Distancia: <strong>{r.distancia !== undefined && r.distancia !== null ? `${Number(r.distancia).toFixed(2)} km` : 'N/D'}</strong>
+          </p>
+          <p className="text-warning" aria-label={`${r.promCalificacion ?? 0} de 5 estrellas`}>
+            {stars(r.promCalificacion)} <span className="text-muted">({((r.promCalificacion ?? 0) as number).toFixed(1)})</span>
+          </p>
+          <p>{r.descripcion}</p>
+        </div>
+      </div>
+    );
+  }) : null;
 
   return (
     <div className="main-content container py-4">
@@ -33,30 +94,11 @@ const RutasComunitarias: React.FC = () => {
         <p>Las rutas comunitarias son creadas y mantenidas por la comunidad local, ofreciendo experiencias auténticas y únicas.</p>
       </div>
 
+      {notif && <Notification type={notif.type} message={notif.message} onClose={() => setNotif(null)} />}
+
       <div className="row g-4 justify-content-center">
-        {(() => {
-          const elementos: React.ReactElement[] = [];
-          for (const r of rutas) {
-            elementos.push(
-              <div key={r.idRuta} className="ruta-full">
-                <Link to={`/rutas/comunitarias/${r.idRuta}`} className="text-decoration-none" aria-label={`Ver detalle ${r.nombre}`}>
-                  <img className="ruta-img" src={r.foto[0]} alt={r.nombre} />
-                </Link>
-                <div className="ruta-body">
-                  <h3>{r.nombre}</h3>
-                  <p>
-                    Dificultad: <span className={badgeClass(r.dificultad)}>{r.dificultad}</span>
-                  </p>
-                  <p className="text-warning" aria-label={`${r.promCalificacion ?? 0} de 5 estrellas`}>
-                    {stars(r.promCalificacion)} <span className="text-muted">({((r.promCalificacion ?? 0) as number).toFixed(1)})</span>
-                  </p>
-                  <p>{r.descripcion}</p>
-                </div>
-              </div>
-            );
-          }
-          return elementos;
-        })()}
+        {loading && <div>Cargando rutas...</div>}
+        {!loading && rutaItems}
       </div>
 
       <div className="text-center mt-4">

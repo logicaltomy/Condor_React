@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
-import { Routes, Route, Link } from "react-router-dom";
+import logo from './img/logo.png';
+import { Routes, Route, Link, Navigate } from "react-router-dom";
 import Home from "./pages/Inicio";
 import Nosotros from "./pages/Nosotros";
 import Contacto from "./pages/Contacto";
@@ -11,14 +12,47 @@ import Comunitarias from "./pages/Comunitarias";
 import RutaDetalle from "./pages/RutaDetalle";
 import Ayuda from "./pages/Ayuda";
 import Ajustes from "./pages/Ajustes";
+import AdminPanel from "./pages/AdminPanel";
 
 import ScrollToTop from "./pages/ScrollToTop";
 import { sesionActiva } from "./Sesion"; 
 
 function App() {
   const [sesionIniciada, setSesionIniciada] = useState(sesionActiva());
+  const [isAdmin, setIsAdmin] = useState(false);
 
   useEffect(() => {
+    // Determinar si el usuario es administrador leyendo el usuario guardado en localStorage
+    const computeAdmin = () => {
+      // Solo considerar admin si además hay sesión iniciada
+      if (!sesionActiva()) {
+        setIsAdmin(false);
+        return;
+      }
+      try {
+        const raw = localStorage.getItem('usuarioDTO');
+        if (raw) {
+          const u = JSON.parse(raw);
+          const rolId = u?.idRol ?? u?.rol?.id ?? null;
+          const rolNombre = (u?.rol?.nombre || '').toString().toLowerCase();
+          const admin = (rolId === 1) || rolNombre.includes('admin') || rolNombre.includes('administrador');
+          setIsAdmin(Boolean(admin));
+          return;
+        }
+      } catch {
+        // ignore parse errors
+      }
+      setIsAdmin(false);
+    };
+
+    computeAdmin();
+
+    // Recompute when session changes (login/logout) and when localStorage is updated in another tab
+    const onStorage = (ev: StorageEvent) => {
+      if (ev.key === 'usuarioDTO' || ev.key === 'sesionIniciada') computeAdmin();
+    };
+    window.addEventListener('storage', onStorage);
+
     const updatePadding = () => {
       const navbar = document.querySelector(".navbar") as HTMLElement;
       const mainContent = document.querySelector(".main-content") as HTMLElement;
@@ -29,9 +63,13 @@ function App() {
     };
     updatePadding();
     window.addEventListener("resize", updatePadding);
-    return () => window.removeEventListener("resize", updatePadding);
 
-  }, []);
+    return () => {
+      window.removeEventListener("resize", updatePadding);
+      window.removeEventListener('storage', onStorage);
+    };
+
+  }, [sesionIniciada]);
 
   return (
     <div className="app-container">
@@ -40,7 +78,7 @@ function App() {
         <div className="container-fluid">
           <div>
             <img
-              src="src/img/logo.png"
+              src={logo}
               alt="Logo"
               style={{ width: "40px", height: "40px", marginRight: "10px" }}
             />
@@ -66,6 +104,11 @@ function App() {
                   Perfil
                 </Link>              
               </li>
+              {isAdmin && (
+                <li className="nav-item">
+                  <Link className="btn btn-lg" to="/admin">Panel de Administrador</Link>
+                </li>
+              )}
             </ul>
           </div>
         </div>
@@ -80,6 +123,7 @@ function App() {
           <Route path="/oficiales" element={<Oficiales />} /> 
           <Route path="/comunitarias" element={<Comunitarias />} />     
           <Route path="/rutas/:tipo/:idRuta" element={<RutaDetalle />} />
+          <Route path="/admin" element={isAdmin ? <AdminPanel /> : <Navigate to="/" replace />} />
           <Route path="/contacto" element={<Contacto />} />
           <Route path="/login" element={<Login setSesionIniciada={setSesionIniciada} />} />
           <Route path="/perfil" element={<Perfil setSesionIniciada={setSesionIniciada} />} />

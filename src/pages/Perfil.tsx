@@ -3,7 +3,6 @@ import { Link, useNavigate } from "react-router-dom"; // <- agrega useNavigate
 import { obtenerUsuarios } from "../User"; // kept for compatibility with older helpers
 import usuarioService from "../services/usuarioService";
 import Notification from "../components/Notification";
-import { extractErrorMessage } from '../services/apiClient';
 
 import { cerrarSesion } from "../Sesion"; // <- importa el helper para cerrar sesión desde la 1.7.0
 
@@ -39,11 +38,6 @@ const [notification, setNotification] = useState<{type: 'success'|'danger'|'info
         const usuarios = obtenerUsuarios();
         const usuarioEncontrado = usuarios.find(user => user.email === correoGuardado);
         if (usuarioEncontrado) setUsuarioActual(usuarioEncontrado);
-        else {
-          const mensaje = extractErrorMessage(err);
-          // Opcional: mostrar notificación de error al cargar perfil
-          // setNotification({ type: 'danger', message: mensaje });
-        }
       });
   }, []);
 
@@ -69,8 +63,8 @@ const [notification, setNotification] = useState<{type: 'success'|'danger'|'info
           setNotification({ type: 'success', message: 'Foto de perfil actualizada correctamente.' });
         })
         .catch(err => {
-          const mensaje = extractErrorMessage(err) || 'Error al subir foto.';
-          setNotification({ type: 'danger', message: mensaje });
+          const msg = err?.response?.data || err?.message || 'Error al subir foto';
+          setNotification({ type: 'danger', message: String(msg) });
         });
     };
     reader.readAsDataURL(file);
@@ -149,13 +143,13 @@ const [notification, setNotification] = useState<{type: 'success'|'danger'|'info
           </Link>
         </div>
       </div>
-      {/* boton para ir a ajustes */}
+      {/* botón para ir a ajustes */}
       <button
         className="btn btn-secondary perfil-ajustes"
         style={{ marginTop: 16, padding: "8px 20px", borderRadius: 8, fontWeight: "bold" }}
         onClick={() => navigate("/ajustes")}
       >
-        Eliminar Usuario
+        Ir a Ajustes
       </button>
       {notification && (
         <Notification type={notification.type} message={notification.message} onClose={() => setNotification(null)} />

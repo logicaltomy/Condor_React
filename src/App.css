@@ -543,11 +543,11 @@ form .btn {
 
 */
 .ruta-full {
-  max-width: 900px;
-  width: 45%;  
-  margin: 5px auto;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.427);
-  border-radius: 8px;
+  max-width: 1100px;
+  width: 80%;
+  margin: 18px auto;
+  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.14);
+  border-radius: 12px;
   display: block;
 }
 
@@ -563,9 +563,66 @@ form .btn {
 }
 
 .ruta-full .ruta-body {
-  background: rgba(255,255,255,0.95);
-  padding: 20px 24px;
-  box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+  background: rgba(255,255,255,0.98);
+  padding: 28px 32px;
+  box-shadow: none;
+}
+
+/* Make card content use wider typography and spacing */
+.ruta-full h3 { font-size: 1.45rem; margin-bottom: 8px; }
+.ruta-full p { color: #333; line-height: 1.45; }
+
+/* RouteForm: coherent layout and wider form */
+.route-form {
+  background: #ffffff;
+  padding: 18px;
+  border-radius: 8px;
+  box-shadow: 0 6px 20px rgba(0,0,0,0.08);
+  width: 100%;
+  max-width: 1100px;
+  color: #222;
+  display: grid;
+  /* Left column flexible, right column has a sensible minimum width */
+  grid-template-columns: 1fr minmax(260px, 380px);
+  gap: 22px;
+  align-items: start;
+}
+
+.route-form .form-label { color: #2e7d32; font-weight: 600; margin-bottom: 6px; }
+.route-form input.form-control, .route-form textarea.form-control, .route-form select.form-select {
+  background: #fff; color: #222; border: 1px solid #d0d0d0;
+}
+
+ .route-form .col-6 { width: 100%; }
+ .route-form .fotos-list { grid-column: 1 / -1; }
+ .route-form .form-check { grid-column: 1 / -1; }
+ .route-form .left-col { display: flex; flex-direction: column; gap: 12px; }
+ .route-form .right-col { display: flex; flex-direction: column; gap: 12px; }
+.route-form .btn { min-width: 120px; }
+
+/* Make right column inputs wider and description textarea taller */
+.route-form .right-col .form-select,
+.route-form .right-col .form-control,
+.route-form .right-col textarea.form-control {
+  width: 100%;
+  box-sizing: border-box;
+}
+.route-form .right-col textarea.form-control {
+  min-height: 200px;
+  resize: vertical;
+}
+
+/* Add subtle separator and padding between columns on large screens */
+@media (min-width: 700px) {
+  .route-form .right-col {
+    padding-left: 12px;
+    border-left: 1px solid rgba(0,0,0,0.04);
+  }
+}
+
+@media (max-width: 900px) {
+  .route-form { grid-template-columns: 1fr; width: 96%; }
+  .ruta-full { width: 96%; }
 }
 
 /* Ajuste para pantallas pequeñas: menos altura y sin superposición tan marcada */

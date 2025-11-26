@@ -4,6 +4,8 @@ import Notification from "../components/Notification";
 import { extractErrorMessage } from '../services/apiClient';
 import { Link, useNavigate } from "react-router-dom";
 import React, { useState } from "react";
+import logoNegro from '../img/logo_negro.png';
+import fondo from '../img/fondo_final.jpeg';
 
 const Register: React.FC = () => {
     const navigate = useNavigate();
@@ -116,7 +118,7 @@ const Register: React.FC = () => {
 
         // Guardamos el usuario nuevo si no hay errores
         if (!nuevosErrores.Correo && !nuevosErrores.Contrasenia && !nuevosErrores.ConfirmarContrasenia && !nuevosErrores.Username) {
-            try {
+                try {
                 // Construir payload compatible con backend
                 const payload = {
                     nombre: Username,
@@ -140,19 +142,29 @@ const Register: React.FC = () => {
                 setErrores({ Correo: "", Contrasenia: "", ConfirmarContrasenia: "", Username: "" });
                 setNotification({ type: 'success', message: `Gracias ${Username}, te has registrado con exito!` });
                 setTimeout(() => navigate('/login'), 1200);
-            } catch (err: any) {
-                const mensaje = extractErrorMessage(err) || 'Error al registrar.';
-                setNotification({ type: 'danger', message: mensaje });
-            }
+                } catch (err: any) {
+                    const status = err?.response?.status;
+                    let userMessage = '';
+                    if (status === 409) {
+                        userMessage = 'El correo ya está registrado.';
+                    } else if (status === 400) {
+                        userMessage = extractErrorMessage(err) || 'Datos inválidos.';
+                    } else if (status >= 500) {
+                        userMessage = 'Error del servidor. Intenta nuevamente más tarde.';
+                    } else {
+                        userMessage = extractErrorMessage(err) || 'Error al registrar.';
+                    }
+                    setNotification({ type: 'danger', message: userMessage });
+                }
         }
     };
 
     return (
-        <div className="main-content" style={{backgroundImage: "url('../src/img/fondo_final.jpeg')", backgroundSize: "cover", minHeight: "100vh", padding: "20px", display: "flex", flexDirection: "column", justifyContent: "center", alignItems: "center"}}>
-            <div className="d-flex align-items-center mb-4">
-                <img src="../src/img/logo_negro.png" className="logo_forms" alt="logo_forms" style={{marginRight: "20px"}}></img>
-                <h1>CONDOR</h1>
-            </div>
+        <div className="main-content" style={{backgroundImage: `url(${fondo})`, backgroundSize: "cover", minHeight: "100vh", padding: "20px", display: "flex", flexDirection: "column", justifyContent: "center", alignItems: "center"}}>
+                <div className="d-flex align-items-center mb-4">
+                    <img src={logoNegro} className="logo_forms" alt="logo_forms" style={{marginRight: "20px"}} />
+                    <h1>CONDOR</h1>
+                </div>
             <form onSubmit={handleSubmit} className="w-100">
                 <h2 style={{textAlign: "center"}}>Crear Usuario</h2>
                 

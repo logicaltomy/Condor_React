@@ -14,24 +14,20 @@
   Comentarios extensos dentro del archivo explican cada bloque.
 */
 
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { useParams, Link } from "react-router-dom"; // useParams para leer :idRuta y :tipo de la URL
-import { obtenerRutas } from "../Ruta"; // helper localStorage + seed
-import type { Ruta } from "../Ruta"; // tipo TS para autocompletado y seguridad
+import rutaService from '../services/rutaService';
+import type { RutaDto } from '../services/rutaService';
+import { extractErrorMessage } from '../services/apiClient';
 
-// badgeClass: función auxiliar que recibe la dificultad y devuelve la clase CSS apropiada
-// Se separa en una función para mantener el JSX limpio y fácil de probar.
-const badgeClass = (dif: Ruta["dificultad"]) => {
-  switch (dif) {
-    case "FACIL":
-      return "badge bg-success";
-    case "MODERADO":
-    case "NORMAL":
-      return "badge bg-warning text-dark";
-    case "DIFICIL":
-    case "EXTREMO":
-      return "badge bg-danger";
-  }
+// badgeClass: devuelve la clase CSS apropiada según la dificultad (case-insensitive)
+const badgeClass = (dif?: string) => {
+  if (!dif) return 'badge bg-secondary';
+  const d = String(dif).toUpperCase();
+  if (d.includes('FACIL') || d === 'FACIL') return 'badge bg-success';
+  if (d.includes('MODERADO') || d.includes('NORMAL')) return 'badge bg-warning text-dark';
+  if (d.includes('DIFICIL') || d.includes('EXTREMO')) return 'badge bg-danger';
+  return 'badge bg-secondary';
 };
 
 /*
@@ -49,6 +45,35 @@ const formatTime = (secs?: number) => {
   return `${m} min`;
 };
 
+const formatDate = (val?: any) => {
+  if (!val) return '-';
+  // If it's a string or number, try direct parsing
+  if (typeof val === 'string' || typeof val === 'number') {
+    const d = new Date(val);
+    if (!isNaN(d.getTime())) return d.toLocaleDateString();
+  }
+  // If backend returned a Java LocalDateTime-like object (year, monthValue, dayOfMonth, hour, minute, second)
+  if (typeof val === 'object') {
+    const y = (val.year ?? val.Y ?? val.y) as number | undefined;
+    const m = (val.monthValue ?? val.month ?? val.M ?? val.m) as number | undefined;
+    const day = (val.dayOfMonth ?? val.day ?? val.d) as number | undefined;
+    const hour = (val.hour ?? val.H ?? 0) as number | undefined;
+    const minute = (val.minute ?? val.min ?? 0) as number | undefined;
+    const second = (val.second ?? val.s ?? 0) as number | undefined;
+    if (y && m && day) {
+      const d = new Date(y, m - 1, day, hour ?? 0, minute ?? 0, second ?? 0);
+      if (!isNaN(d.getTime())) return d.toLocaleDateString();
+    }
+    // If it's an object containing an ISO string
+    if (val.toString) {
+      const s = String(val);
+      const d2 = new Date(s);
+      if (!isNaN(d2.getTime())) return d2.toLocaleDateString();
+    }
+  }
+  return '-';
+};
+
 const RutaDetalle: React.FC = () => {
   /*
     1) Leer parámetros de la URL:
@@ -57,25 +82,36 @@ const RutaDetalle: React.FC = () => {
          la usamos para construir el link de 'volver'.
   */
   const { idRuta, tipo } = useParams();
+  const [ruta, setRuta] = useState<RutaDto | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  /*
-    2) Obtener todas las rutas disponibles. `obtenerRutas()` devuelve
-       el contenido de localStorage o el seed DEFAULT_RUTAS si no hay datos.
-       Este enfoque hace que la página funcione sin backend.
-  */
-  const rutas = obtenerRutas();
+  useEffect(() => {
+    let mounted = true;
+    if (!idRuta) {
+      setError('Ruta no válida');
+      setLoading(false);
+      return;
+    }
+    setLoading(true);
+    rutaService.getRutaById(Number(idRuta))
+      .then(res => { if (!mounted) return; setRuta(res.data); })
+      .catch(err => { if (!mounted) return; setError(extractErrorMessage(err)); })
+      .finally(() => { if (!mounted) return; setLoading(false); });
+    return () => { mounted = false; };
+  }, [idRuta]);
 
-  /*
-    3) Buscar la ruta cuyo `idRuta` coincida con el parámetro.
-       - Si no existe, renderizamos una respuesta amable "Ruta no encontrada".
-  */
-  const ruta = rutas.find((r) => r.idRuta === idRuta);
+  if (loading) {
+    return (
+      <div className="main-content container py-4">Cargando...</div>
+    );
+  }
 
-  if (!ruta) {
+  if (error || !ruta) {
     return (
       <div className="main-content container py-4">
         <h2>Ruta no encontrada</h2>
-        <p>No se encontró la ruta solicitada.</p>
+        <p>{error || 'No se encontró la ruta solicitada.'}</p>
         <Link to={tipo === "comunitarias" ? "/comunitarias" : "/oficiales"} className="btn btn-secondary">Volver</Link>
       </div>
     );
@@ -140,7 +176,7 @@ const RutaDetalle: React.FC = () => {
                - A la derecha, renderizado visual de estrellas y la nota numérica
             */}
             <div className="d-flex gap-2 align-items-center mb-2">
-              <span className={badgeClass(ruta.dificultad)}>{ruta.dificultad}</span>
+              <span className={badgeClass(ruta.dificultad)}>{ruta.dificultad ?? '-'}</span>
               <span className="badge bg-secondary">{ruta.region ?? "-"}</span>
 
               {/* Estrellas: repetimos '★' según la calificación redondeada */}
@@ -154,9 +190,9 @@ const RutaDetalle: React.FC = () => {
           {/* Meta: datos clave de la ruta en formato compacto */}
           <section className="panel-meta d-flex flex-wrap gap-3 mb-3">
             <div className="meta-item">Distancia: <strong>{ruta.distancia ?? '-'} km</strong></div>
-            <div className="meta-item">Duración: <strong>{formatTime(ruta.tiempoSegundos)}</strong></div>
+            <div className="meta-item">Duración: <strong>{formatTime((ruta as any).tiempo_segundos ?? (ruta as any).tiempoSegundos ?? (ruta as any).tiempo)}</strong></div>
             {/* Fecha: simplificada con toLocaleDateString para no complicarnos */}
-            <div className="meta-item">Publicado: <strong>{new Date(ruta.f_public).toLocaleDateString()}</strong></div>
+            <div className="meta-item">Publicado: <strong>{formatDate((ruta as any).f_public ?? (ruta as any).fecha_publicacion ?? (ruta as any).fecha)}</strong></div>
           </section>
 
           {/* Descripción larga de la ruta */}
