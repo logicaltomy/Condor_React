@@ -19,6 +19,7 @@ import { useParams, Link } from "react-router-dom"; // useParams para leer :idRu
 import rutaService from '../services/rutaService';
 import type { RutaDto } from '../services/rutaService';
 import { extractErrorMessage } from '../services/apiClient';
+import calificacionesService from '../services/calificacionesService';
 
 // badgeClass: devuelve la clase CSS apropiada según la dificultad (case-insensitive)
 const badgeClass = (dif?: string) => {
@@ -28,6 +29,12 @@ const badgeClass = (dif?: string) => {
   if (d.includes('MODERADO') || d.includes('NORMAL')) return 'badge bg-warning text-dark';
   if (d.includes('DIFICIL') || d.includes('EXTREMO')) return 'badge bg-danger';
   return 'badge bg-secondary';
+};
+
+const renderStars = (avg?: number | null) => {
+  const raw = typeof avg === 'number' ? avg : Number(avg ?? 0);
+  const filled = Math.min(5, Math.max(0, Math.floor(raw || 0))); // ignorar decimales
+  return '★'.repeat(filled) + '☆'.repeat(5 - filled);
 };
 
 /*
@@ -45,35 +52,6 @@ const formatTime = (secs?: number) => {
   return `${m} min`;
 };
 
-const formatDate = (val?: any) => {
-  if (!val) return '-';
-  // If it's a string or number, try direct parsing
-  if (typeof val === 'string' || typeof val === 'number') {
-    const d = new Date(val);
-    if (!isNaN(d.getTime())) return d.toLocaleDateString();
-  }
-  // If backend returned a Java LocalDateTime-like object (year, monthValue, dayOfMonth, hour, minute, second)
-  if (typeof val === 'object') {
-    const y = (val.year ?? val.Y ?? val.y) as number | undefined;
-    const m = (val.monthValue ?? val.month ?? val.M ?? val.m) as number | undefined;
-    const day = (val.dayOfMonth ?? val.day ?? val.d) as number | undefined;
-    const hour = (val.hour ?? val.H ?? 0) as number | undefined;
-    const minute = (val.minute ?? val.min ?? 0) as number | undefined;
-    const second = (val.second ?? val.s ?? 0) as number | undefined;
-    if (y && m && day) {
-      const d = new Date(y, m - 1, day, hour ?? 0, minute ?? 0, second ?? 0);
-      if (!isNaN(d.getTime())) return d.toLocaleDateString();
-    }
-    // If it's an object containing an ISO string
-    if (val.toString) {
-      const s = String(val);
-      const d2 = new Date(s);
-      if (!isNaN(d2.getTime())) return d2.toLocaleDateString();
-    }
-  }
-  return '-';
-};
-
 const RutaDetalle: React.FC = () => {
   /*
     1) Leer parámetros de la URL:
@@ -85,6 +63,31 @@ const RutaDetalle: React.FC = () => {
   const [ruta, setRuta] = useState<RutaDto | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [usuarioId, setUsuarioId] = useState<number | null>(null);
+  const [puedeCalificar, setPuedeCalificar] = useState<boolean>(false);
+  const [showModal, setShowModal] = useState(false);
+  const [puntuacion, setPuntuacion] = useState<number>(5);
+  const [comentario, setComentario] = useState<string>('');
+  const [submitting, setSubmitting] = useState(false);
+  const [totalCalificaciones, setTotalCalificaciones] = useState<number>(0);
+  const fetchPromedioRuta = React.useCallback((rutaId: number) => {
+    if (!rutaId) return;
+    calificacionesService.promedioPorRuta(rutaId)
+      .then(resp => {
+        if (!resp.data) {
+          setTotalCalificaciones(0);
+          setRuta(prev => prev ? { ...prev, promCalificacion: 0 } : prev);
+          return;
+        }
+        const promedio = Number(resp.data.promedio ?? resp.data.promedio_calificacion ?? 0);
+        const conteo = Number(resp.data.conteo ?? 0);
+        setRuta(prev => prev ? { ...prev, promCalificacion: Number.isNaN(promedio) ? 0 : promedio } : prev);
+        setTotalCalificaciones(Number.isNaN(conteo) ? 0 : conteo);
+      })
+      .catch(() => {
+        setTotalCalificaciones(0);
+      });
+  }, []);
 
   useEffect(() => {
     let mounted = true;
@@ -95,10 +98,45 @@ const RutaDetalle: React.FC = () => {
     }
     setLoading(true);
     rutaService.getRutaById(Number(idRuta))
-      .then(res => { if (!mounted) return; setRuta(res.data); })
+      .then(res => {
+        if (!mounted) return;
+        setRuta(res.data);
+        fetchPromedioRuta(Number(idRuta));
+      })
       .catch(err => { if (!mounted) return; setError(extractErrorMessage(err)); })
       .finally(() => { if (!mounted) return; setLoading(false); });
     return () => { mounted = false; };
+  }, [idRuta, fetchPromedioRuta]);
+
+  const promedioParaMostrar = ruta?.promCalificacion ?? 0;
+
+  // Obtener id de usuario desde localStorage y comprobar si ya calificó
+  useEffect(() => {
+    const raw = localStorage.getItem('usuarioDTO') || localStorage.getItem('usuarioActual');
+    let id: number | null = null;
+    try {
+      if (!raw) {
+        id = null;
+      } else {
+        const parsed = JSON.parse(raw);
+        id = parsed?.id ?? parsed?.idUsuario ?? parsed?.id_usuario ?? null;
+      }
+    } catch {
+      id = null;
+    }
+    setUsuarioId(id);
+
+    if (id && idRuta) {
+      calificacionesService.existeCalificacion(id, Number(idRuta))
+        .then(r => {
+          const existe = r.data?.existe === true;
+          setPuedeCalificar(!existe);
+        })
+        .catch(() => {
+          // si falla la comprobación, permitimos intentar calificar y manejamos errores al enviar
+          setPuedeCalificar(true);
+        });
+    }
   }, [idRuta]);
 
   if (loading) {
@@ -179,10 +217,24 @@ const RutaDetalle: React.FC = () => {
               <span className={badgeClass(ruta.dificultad)}>{ruta.dificultad ?? '-'}</span>
               <span className="badge bg-secondary">{ruta.region ?? "-"}</span>
 
-              {/* Estrellas: repetimos '★' según la calificación redondeada */}
-              <div className="ms-auto text-warning" aria-label={`${ruta.promCalificacion ?? 0} de 5 estrellas`}>
-                {'★'.repeat(Math.round(ruta.promCalificacion ?? 0))}{'☆'.repeat(5 - Math.round(ruta.promCalificacion ?? 0))}
-                <small className="text-muted ms-2">({(ruta.promCalificacion ?? 0).toFixed(1)})</small>
+              {/* Estrellas: solo se consideran los enteros hacia abajo */}
+              <div className="ms-auto text-warning" aria-label={`${Math.floor(promedioParaMostrar ?? 0)} de 5 estrellas`}>
+                {renderStars(promedioParaMostrar)}
+                <small className="text-muted ms-2">
+                  {totalCalificaciones > 0
+                    ? `${(promedioParaMostrar ?? 0).toFixed(1)} · ${totalCalificaciones} ${totalCalificaciones === 1 ? 'calificación' : 'calificaciones'}`
+                    : 'Sin calificaciones aún'}
+                </small>
+              </div>
+              <div className="ms-3">
+                <button
+                  className="btn btn-primary btn-sm"
+                  onClick={() => setShowModal(true)}
+                  disabled={!usuarioId || !puedeCalificar}
+                  title={!usuarioId ? 'Inicia sesión para calificar' : (!puedeCalificar ? 'Ya calificaste esta ruta' : 'Calificar esta ruta')}
+                >
+                  Calificar ruta
+                </button>
               </div>
             </div>
           </header>
@@ -191,8 +243,6 @@ const RutaDetalle: React.FC = () => {
           <section className="panel-meta d-flex flex-wrap gap-3 mb-3">
             <div className="meta-item">Distancia: <strong>{ruta.distancia ?? '-'} km</strong></div>
             <div className="meta-item">Duración: <strong>{formatTime((ruta as any).tiempo_segundos ?? (ruta as any).tiempoSegundos ?? (ruta as any).tiempo)}</strong></div>
-            {/* Fecha: simplificada con toLocaleDateString para no complicarnos */}
-            <div className="meta-item">Publicado: <strong>{formatDate((ruta as any).f_public ?? (ruta as any).fecha_publicacion ?? (ruta as any).fecha)}</strong></div>
           </section>
 
           {/* Descripción larga de la ruta */}
@@ -220,6 +270,66 @@ const RutaDetalle: React.FC = () => {
             </div>
           </section>
         </article>
+
+        {/* Modal simple de calificación */}
+        {showModal && (
+          <>
+            <div className="modal-backdrop fade show" style={{ position: 'fixed', inset: 0, zIndex: 1050 }} />
+            <div className="modal d-block" tabIndex={-1} role="dialog" style={{ zIndex: 1060 }}>
+              <div className="modal-dialog modal-dialog-centered" role="document">
+                <div className="modal-content">
+                  <div className="modal-header">
+                    <h5 className="modal-title">Calificar ruta</h5>
+                    <button type="button" className="btn-close" aria-label="Cerrar" onClick={() => setShowModal(false)} />
+                  </div>
+                  <div className="modal-body">
+                    <p>Selecciona la calificación (1-5 estrellas):</p>
+                    <div className="d-flex gap-2 mb-3">
+                      {[1,2,3,4,5].map(s => (
+                        <button key={s} className={`btn ${s <= puntuacion ? 'btn-warning' : 'btn-outline-secondary'}`} onClick={() => setPuntuacion(s)}>
+                          {s} ★
+                        </button>
+                      ))}
+                    </div>
+                    <div className="mb-3">
+                      <label className="form-label">Comentario (opcional)</label>
+                      <textarea className="form-control" value={comentario} onChange={e => setComentario(e.target.value)} maxLength={120} />
+                    </div>
+                  </div>
+                  <div className="modal-footer">
+                    <button type="button" className="btn btn-secondary" onClick={() => setShowModal(false)} disabled={submitting}>Cancelar</button>
+                    <button type="button" className="btn btn-primary" onClick={async () => {
+                      if (!usuarioId) return alert('Inicia sesión para calificar');
+                      setSubmitting(true);
+                      try {
+                        const payload = { idUsuario: usuarioId, idRuta: Number(idRuta), puntuacion, comentario };
+                        const resp = await calificacionesService.crearCalificacion(payload);
+                        const prom = resp.data?.promedio ?? null;
+                        const conteo = resp.data?.conteo ?? null;
+                        if (prom !== null) {
+                          setRuta(prev => prev ? { ...prev, promCalificacion: Number(prom) } : prev);
+                        }
+                        if (conteo !== null) {
+                          setTotalCalificaciones(Number(conteo));
+                        }
+                        setPuedeCalificar(false);
+                        setShowModal(false);
+                      } catch (err: any) {
+                        const msg = extractErrorMessage(err);
+                        alert(msg || 'Error al enviar calificación');
+                        if (err?.response?.status === 409) setPuedeCalificar(false);
+                      } finally {
+                        setSubmitting(false);
+                      }
+                    }} disabled={submitting}>
+                      {submitting ? 'Enviando...' : 'Enviar calificación'}
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </>
+        )}
       </div>
     </div>
   );

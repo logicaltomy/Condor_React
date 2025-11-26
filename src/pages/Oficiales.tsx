@@ -19,12 +19,6 @@ const badgeClass = (dif: Ruta["dificultad"]) => {
   }
 };
 
-// Función para generar una cadena de estrellas según la calificación
-const stars = (n: number | undefined) => {
-  const v = Math.round(n || 0);
-  return "★".repeat(v) + "☆".repeat(5 - v);
-};
-
 // Componente principal para mostrar las rutas oficiales
 const RutasOficiales: React.FC = () => {
   const [rutas, setRutas] = useState<RutaDto[]>([]);
@@ -71,9 +65,6 @@ const RutasOficiales: React.FC = () => {
           </p>
           <p>
             Distancia: <strong>{r.distancia !== undefined && r.distancia !== null ? `${Number(r.distancia).toFixed(2)} km` : 'N/D'}</strong>
-          </p>
-          <p className="text-warning" aria-label={`${r.promCalificacion ?? 0} de 5 estrellas`}>
-            {stars(r.promCalificacion)} <span className="text-muted">({((r.promCalificacion ?? 0) as number).toFixed(1)})</span>
           </p>
           <p>{r.descripcion}</p>
         </div>

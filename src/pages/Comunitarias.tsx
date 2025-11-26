@@ -20,11 +20,6 @@ const badgeClass = (dif?: string) => {
   }
 };
 
-const stars = (n: number | undefined) => {
-  const v = Math.round(n || 0);
-  return "★".repeat(v) + "☆".repeat(5 - v);
-};
-
 const RutasComunitarias: React.FC = () => {
   const [rutas, setRutas] = useState<RutaDto[]>([]);
   const [loading, setLoading] = useState(true);
@@ -75,9 +70,6 @@ const RutasComunitarias: React.FC = () => {
           </p>
           <p>
             Distancia: <strong>{r.distancia !== undefined && r.distancia !== null ? `${Number(r.distancia).toFixed(2)} km` : 'N/D'}</strong>
-          </p>
-          <p className="text-warning" aria-label={`${r.promCalificacion ?? 0} de 5 estrellas`}>
-            {stars(r.promCalificacion)} <span className="text-muted">({((r.promCalificacion ?? 0) as number).toFixed(1)})</span>
           </p>
           <p>{r.descripcion}</p>
         </div>

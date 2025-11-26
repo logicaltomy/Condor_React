@@ -4,6 +4,7 @@ import { obtenerUsuarios } from "../User"; // kept for compatibility with older 
 import usuarioService from "../services/usuarioService";
 import Notification from "../components/Notification";
 import logrosService from "../services/logrosService";
+import calificacionesService from "../services/calificacionesService";
 
 import { cerrarSesion } from "../Sesion"; // <- importa el helper para cerrar sesión desde la 1.7.0
 
@@ -22,26 +23,57 @@ const navigate = useNavigate(); // <- para redirigir sin recargar
 const [usuarioActual, setUsuarioActual] = useState<any | null>(null); // usuario desde backend
 const [notification, setNotification] = useState<{type: 'success'|'danger'|'info', message: string} | null>(null);
 const [logrosGanados, setLogrosGanados] = useState<Array<any>>([]);
+const [calificacionStats, setCalificacionStats] = useState<{ total: number; cantidad: number }>({ total: 0, cantidad: 0 });
 // cuando se encuentre dicho usuario, se reemplaza el null en cuestión por el objeto con su información
 
 
 // UseEffect se usa para ejecutar código cuando el componente se monta o actualiza
   useEffect(() => {
+    // Preferir objeto en localStorage (usuarioDTO / usuarioActual) que ya contiene id
+    const rawDTO = localStorage.getItem('usuarioDTO') || localStorage.getItem('usuarioActual');
+    if (rawDTO) {
+      try {
+        const parsed = JSON.parse(rawDTO);
+        const idFromStorage = parsed?.id ?? parsed?.idUsuario ?? parsed?.id_usuario ?? null;
+        if (idFromStorage) {
+          const numericId = Number(idFromStorage);
+          setUsuarioActual(parsed);
+          fetchTrofeos(numericId);
+          fetchCalificacionesUsuario(numericId);
+          return;
+        }
+      } catch (e) {
+        // rawDTO no es JSON, puede ser un correo: caemos al flujo por correo
+      }
+    }
+
     const correoGuardado = localStorage.getItem("usuarioActual");
     if (!correoGuardado) return;
 
-    // Traer usuario real desde backend
+    // Traer usuario real desde backend por correo (compatibilidad)
     usuarioService.getUserByCorreo(correoGuardado)
       .then(resp => {
         setUsuarioActual(resp.data);
         const id = resp.data?.id ?? resp.data?.idUsuario ?? resp.data?.id_usuario ?? null;
-        if (id) fetchTrofeos(id);
+        if (id) {
+          const numericId = Number(id);
+          fetchTrofeos(numericId);
+          fetchCalificacionesUsuario(numericId);
+        }
       })
-      .catch(err => {
+      .catch(() => {
         // fallback a helper local si falla
         const usuarios = obtenerUsuarios();
         const usuarioEncontrado = usuarios.find(user => user.email === correoGuardado);
-        if (usuarioEncontrado) setUsuarioActual(usuarioEncontrado);
+        if (usuarioEncontrado) {
+          setUsuarioActual(usuarioEncontrado);
+          const id = (usuarioEncontrado?.id ?? usuarioEncontrado?.idUsuario ?? usuarioEncontrado?.id_usuario) ?? null;
+          if (id) {
+            const numericId = Number(id);
+            fetchTrofeos(numericId);
+            fetchCalificacionesUsuario(numericId);
+          }
+        }
       });
   }, []);
 
@@ -53,6 +85,20 @@ const [logrosGanados, setLogrosGanados] = useState<Array<any>>([]);
         // Dejar el array vacío y registrar para depuración.
         console.warn('No se pudieron cargar los logros:', err?.message || err);
         setLogrosGanados([]);
+      });
+  };
+
+  const fetchCalificacionesUsuario = (idUsuario: number) => {
+    calificacionesService.calificacionesPorUsuario(idUsuario)
+      .then(resp => {
+        const lista = Array.isArray(resp.data) ? resp.data : [];
+        const cantidad = lista.length;
+        const total = lista.reduce((acc, cal) => acc + (Number(cal?.puntuacion ?? cal?.score ?? 0) || 0), 0);
+        setCalificacionStats({ total, cantidad });
+      })
+      .catch(err => {
+        console.warn('No se pudieron cargar las calificaciones del usuario:', err?.message || err);
+        setCalificacionStats({ total: 0, cantidad: 0 });
       });
   };
 
@@ -156,6 +202,10 @@ const [logrosGanados, setLogrosGanados] = useState<Array<any>>([]);
               {usuarioActual.kmRecorridos !== undefined && <p><strong>KM recorridos:</strong> {usuarioActual.kmRecorridos}</p>}
               {/* Mostrar número de logros conseguidos como texto plano (no notificaciones invasivas) */}
               <p><strong>Logros conseguidos:</strong> {Array.isArray(logrosGanados) ? logrosGanados.length : 0}</p>
+              <p>
+                <strong>Calificaciones realizadas:</strong> {calificacionStats.cantidad}
+                <span className="text-muted ms-2">Total otorgado: {calificacionStats.total} ★</span>
+              </p>
           </div>
           ) : (
             <p>No se encontró información del usuario. Inicia sesión nuevamente.</p>
